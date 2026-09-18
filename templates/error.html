@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block body_class %}page-error{% endblock %}
+
+{% block content %}
+<div class="stage stage--narrow stage--center">
+  <div class="error-box">
+    <div class="error-box__mark" aria-hidden="true">!</div>
+    <h1 class="error-box__title">{{ title }}</h1>
+    <p class="error-box__body">{{ body|nl2br }}</p>
+    <a class="btn btn--primary" href="/">{{ t('errors.restart') }}</a>
+  </div>
+</div>
+{% endblock %}

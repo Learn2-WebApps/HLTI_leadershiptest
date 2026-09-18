@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}{{ badge }}{% endblock %}
+{% block body_class %}page-question{% endblock %}
+
+{% block progress %}
+<div class="progress" role="progressbar"
+     aria-valuenow="{{ overall_index }}" aria-valuemin="0" aria-valuemax="{{ overall_total }}"
+     aria-label="진행률">
+  <div class="progress__bar"
+       style="width: {{ (overall_index / overall_total * 100)|round(1) }}%"></div>
+</div>
+<div class="topbar">
+  <span class="topbar__badge">{{ badge }}</span>
+  <span class="topbar__count">{{ t('quiz.progress_label', { current: overall_index, total: overall_total }) }}</span>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="stage stage--question">
+
+  {% if error %}
+  <p class="form-error" role="alert">두 가지를 각각 하나씩 골라 주세요.</p>
+  {% endif %}
+
+  <form method="post" id="question-form"
+        action="{{ form_action }}" class="dialogue">
+    <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+    <input type="hidden" name="first" id="answer-first" value="{{ saved.first or '' }}">
+    <input type="hidden" name="last" id="answer-last" value="{{ saved.last or '' }}">
+
+    <div class="dialogue__panel">
+
+      <aside class="profile">
+        <div class="profile__frame">
+          {% if profile.character %}
+          <img src="{{ asset('images/characters/' + profile.character.image) }}"
+               alt="" width="120" height="120" decoding="async">
+          {% else %}
+          <span class="profile__unknown">{{ profile.unknown_label }}</span>
+          {% endif %}
+        </div>
+        <p class="profile__name">{{ profile.name }}</p>
+      </aside>
+
+      <div class="dialogue__body">
+        {% if question.area %}
+        <p class="dialogue__area">{{ question.area }}</p>
+        {% endif %}
+
+        <p class="dialogue__text" id="situation"
+           data-text="{{ question.situation }}">{{ question.situation }}</p>
+
+        {% if is_tiebreak %}
+        <p class="dialogue__prompt" id="prompt"></p>
+        {% else %}
+        <!-- 두 칸 중 아무 쪽이나 눌러 다시 고를 수 있습니다 -->
+        <div class="steps" id="steps" role="tablist">
+          <button type="button" class="step" id="step-first"
+                  role="tab" data-step="first" aria-selected="true">
+            <span class="step__label">{{ t('quiz.step_first') }}</span>
+            <span class="step__value" id="step-first-value">{{ t('quiz.step_empty') }}</span>
+          </button>
+          <button type="button" class="step" id="step-last"
+                  role="tab" data-step="last" aria-selected="false">
+            <span class="step__label">{{ t('quiz.step_last') }}</span>
+            <span class="step__value" id="step-last-value">{{ t('quiz.step_empty') }}</span>
+          </button>
+        </div>
+        <p class="dialogue__prompt" id="prompt"></p>
+        <p class="steps__hint">{{ t('quiz.step_hint') }}</p>
+        {% endif %}
+
+        <ul class="options" id="options">
+          {% for opt in question.options %}
+          <li>
+            <button type="button" class="option" data-id="{{ opt.id }}">
+              <span class="option__key">{{ loop.index }}</span>
+              <span class="option__text">{{ opt.text }}</span>
+            </button>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <div class="dialogue__actions">
+      {% if prev_url %}
+      <a class="btn btn--ghost" href="{{ prev_url }}">{{ t('quiz.prev') }}</a>
+      {% else %}
+      <span></span>
+      {% endif %}
+      <button class="btn btn--primary" type="submit" id="next-btn" disabled>
+        {{ t('quiz.next') }}
+      </button>
+    </div>
+  </form>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="application/json" id="quiz-config">
+  {{ {
+      "isTiebreak": is_tiebreak,
+      "firstPrompt": t('quiz.tie_prompt') if is_tiebreak else t('quiz.first_prompt'),
+      "lastPrompt": t('quiz.last_prompt'),
+      "savedFirst": saved.first or "",
+      "savedLast": saved.last or "",
+      "stepEmpty": t('quiz.step_empty')
+  }| json_script }}
+</script>
+<script src="{{ asset('js/quiz.js') }}" defer></script>
+{% endblock %}

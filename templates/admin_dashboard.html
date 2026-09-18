@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}{{ t('admin.title') }}{% endblock %}
+{% block body_class %}page-admin{% endblock %}
+
+{% block content %}
+<div class="stage stage--wide">
+
+  <header class="admin-head">
+    <h1 class="admin-title">{{ t('admin.title') }}</h1>
+    <div class="admin-head__actions">
+      <!-- 진행자가 참여자 화면을 확인할 수 있게. 관리자 로그인은 유지됩니다. -->
+      <a class="btn btn--ghost btn--sm" href="/" target="_blank" rel="noopener">
+        {{ t('admin.go_to_test') }}
+      </a>
+      <form method="post" action="/admin/logout">
+        <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+        <button class="btn btn--ghost btn--sm" type="submit">{{ t('admin.logout') }}</button>
+      </form>
+    </div>
+  </header>
+
+  {% if error %}
+  <p class="form-error" role="alert">{{ error }}</p>
+  {% endif %}
+
+  <section class="card">
+    <h2 class="card__title">{{ t('admin.create_session_title') }}</h2>
+    <form class="inline-form" method="post" action="/admin/sessions">
+      <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+      <label class="sr-only" for="session-name">{{ t('admin.session_name_label') }}</label>
+      <input class="field__input" id="session-name" name="name" type="text"
+             maxlength="60" required
+             placeholder="{{ t('admin.session_name_placeholder') }}">
+      <button class="btn btn--primary" type="submit">{{ t('admin.create_submit') }}</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2 class="card__title">{{ t('admin.session_list_title') }}</h2>
+
+    {% if sessions | length == 0 %}
+    <p class="empty">{{ t('admin.no_sessions') }}</p>
+    {% else %}
+    <div class="table-scroll">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>{{ t('admin.col_code') }}</th>
+            <th>{{ t('admin.col_name') }}</th>
+            <th>{{ t('admin.col_created') }}</th>
+            <th class="num">{{ t('admin.col_count') }}</th>
+            <th>{{ t('admin.col_status') }}</th>
+            <th>{{ t('admin.allow_retake_label') }}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in sessions %}
+          <tr>
+            <td><span class="code-chip">{{ s.code }}</span></td>
+            <td>
+              <a class="link" href="/admin/sessions/{{ s.id }}">
+                {{ s.name }}
+              </a>
+            </td>
+            <td class="muted">{{ s.created_at|localdt }}</td>
+            <td class="num">{{ s.participant_count }}</td>
+            <td>
+              <span class="status {{ 'status--on' if s.is_active else 'status--off' }}">
+                {{ t('admin.status_active') if s.is_active else t('admin.status_closed') }}
+              </span>
+            </td>
+            <td>
+              <form method="post" action="/admin/sessions/{{ s.id }}/retake">
+                <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+                <button class="btn btn--tiny {{ 'btn--on' if s.allow_retake else 'btn--ghost' }}"
+                        type="submit">{{ '허용' if s.allow_retake else '차단' }}</button>
+              </form>
+            </td>
+            <td class="row-actions">
+              <form method="post" action="/admin/sessions/{{ s.id }}/toggle">
+                <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+                <button class="btn btn--tiny btn--ghost" type="submit">
+                  {{ t('admin.close_session') if s.is_active else t('admin.reopen_session') }}
+                </button>
+              </form>
+              {% if not s.is_active %}
+              <form method="post" action="/admin/sessions/{{ s.id }}/delete"
+                    class="js-delete-form"
+                    data-name="{{ s.name }}"
+                    data-code="{{ s.code }}"
+                    data-count="{{ s.participant_count }}">
+                <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+                <button class="btn btn--tiny btn--danger" type="submit">
+                  {{ t('admin.delete_session') }}
+                </button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="table-hint">{{ t('admin.delete_hint') }}</p>
+    {% endif %}
+  </section>
+
+  <dialog class="sheet sheet--confirm" id="delete-dialog" aria-labelledby="delete-title">
+    <h3 class="sheet__name" id="delete-title">{{ t('admin.delete_title') }}</h3>
+    <p class="sheet__body" id="delete-body"></p>
+    <div class="sheet__actions">
+      <button type="button" class="btn btn--ghost" id="delete-cancel">
+        {{ t('admin.delete_cancel') }}
+      </button>
+      <button type="button" class="btn btn--danger" id="delete-confirm">
+        {{ t('admin.delete_confirm') }}
+      </button>
+    </div>
+  </dialog>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="application/json" id="admin-config">
+  {{ { "deleteBody": t('admin.delete_body') } | json_script }}
+</script>
+<script src="{{ asset('js/admin.js') }}" defer></script>
+{% endblock %}
