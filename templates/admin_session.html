@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% block title %}{{ session_row.name }}{% endblock %}
+{% block body_class %}page-admin{% endblock %}
+
+{% block content %}
+<div class="stage stage--wide">
+
+  <header class="admin-head">
+    <div>
+      <a class="link link--back" href="/admin/dashboard">
+        ← {{ t('admin.back_to_list') }}
+      </a>
+      <h1 class="admin-title">
+        <span class="code-chip code-chip--lg">{{ session_row.code }}</span>
+        {{ session_row.name }}
+      </h1>
+      <p class="muted">
+        {{ session_row.created_at|localdt }} ·
+        {{ t('admin.col_count') }} {{ session_row.participant_count }}명 ·
+        <span class="status {{ 'status--on' if session_row.is_active else 'status--off' }}">
+          {{ t('admin.status_active') if session_row.is_active else t('admin.status_closed') }}
+        </span>
+      </p>
+    </div>
+    <div class="admin-head__actions">
+      <a class="btn btn--ghost btn--sm" href="/" target="_blank" rel="noopener">
+        {{ t('admin.go_to_test') }}
+      </a>
+      <a class="btn btn--primary btn--sm"
+         href="/admin/sessions/{{ session_row.id }}/export.csv">
+        {{ t('admin.download_csv') }}
+      </a>
+      <form method="post" action="/admin/sessions/{{ session_row.id }}/toggle">
+        <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+        <input type="hidden" name="next"
+               value="/admin/sessions/{{ session_row.id }}">
+        <button class="btn btn--ghost btn--sm" type="submit">
+          {{ t('admin.close_session') if session_row.is_active else t('admin.reopen_session') }}
+        </button>
+      </form>
+    </div>
+  </header>
+
+  <!-- 통계 -->
+  <section class="card">
+    <h2 class="card__title">{{ t('admin.stats_title') }}</h2>
+
+    {% if stats.total == 0 %}
+    <p class="empty">{{ t('admin.no_participants') }}</p>
+    {% else %}
+
+    <div class="stats-grid">
+      <div class="stat-block">
+        <h3 class="stat-block__title">{{ t('admin.stats_type') }}</h3>
+        <ul class="bar-list">
+          {% for ty in types %}
+          {% set count = stats.typeCounts | lookup(ty.key, 0) %}
+          {% set pct = (count / stats.total * 100) if stats.total else 0 %}
+          <li class="bar-row">
+            <span class="bar-row__label">{{ ty.name }}</span>
+            <span class="bar-row__track">
+              <span class="bar-row__fill type-fill-{{ ty.key }}"
+                    style="width: {{ pct|round(1) }}%"></span>
+            </span>
+            <span class="bar-row__value">{{ count }}<small>({{ pct|round }}%)</small></span>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <div class="stat-block">
+        <h3 class="stat-block__title">{{ t('admin.stats_match') }}</h3>
+        {% if stats.predictedTotal %}
+        <p class="stat-big">{{ stats.matchRate|round }}<small>%</small></p>
+        <p class="muted">
+          {{ t('admin.stats_match_detail',
+                { predicted_total: stats.predictedTotal, matched: stats.matched }) }}
+        </p>
+        <p class="muted">유형만 같은 경우 {{ stats.sameType }}명</p>
+        {% else %}
+        <p class="empty">{{ t('admin.stats_no_prediction') }}</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="stat-block">
+      <h3 class="stat-block__title">{{ t('admin.stats_character') }}</h3>
+      <ul class="bar-list bar-list--dense">
+        {% for ch in characters %}
+        {% set count = stats.characterCounts | lookup(ch.key, 0) %}
+        {% set pct = (count / stats.total * 100) if stats.total else 0 %}
+        <li class="bar-row">
+          <span class="bar-row__label">{{ ch.name }}</span>
+          <span class="bar-row__track">
+            <span class="bar-row__fill type-fill-{{ ch.type }}"
+                  style="width: {{ pct|round(1) }}%"></span>
+          </span>
+          <span class="bar-row__value">{{ count }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    {% endif %}
+  </section>
+
+  <!-- 응답자 목록 -->
+  <section class="card">
+    <h2 class="card__title">{{ t('admin.participants_title') }}</h2>
+
+    {% if participants | length == 0 %}
+    <p class="empty">{{ t('admin.no_participants') }}</p>
+    {% else %}
+    <div class="table-scroll">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>{{ t('admin.col_participant') }}</th>
+            <th>{{ t('admin.col_predicted') }}</th>
+            <th>{{ t('admin.col_result') }}</th>
+            <th>{{ t('admin.col_type') }}</th>
+            <th>{{ t('admin.col_completed') }}</th>
+            <th>{{ t('admin.col_view') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in participants %}
+          {% set result_char = characters_by_key[p.result_character] %}
+          {% set pred_char = characters_by_key[p.predicted_character] if p.predicted_character else null %}
+          <tr>
+            <td>{{ p.name }}</td>
+            <td class="muted">{{ pred_char.name if pred_char else t('admin.none') }}</td>
+            <td>
+              {{ result_char.name if result_char else p.result_character }}
+              {% if p.had_tie %}<span class="tag">동점</span>{% endif %}
+            </td>
+            <td><span class="chip chip--sm">{{ type_name(p.result_type) }}</span></td>
+            <td class="muted">{{ p.completed_at|localdt }}</td>
+            <td>
+              <a class="btn btn--tiny btn--ghost"
+                 href="/admin/participants/{{ p.id }}">
+                {{ t('admin.view_result') }}
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </section>
+
+</div>
+{% endblock %}

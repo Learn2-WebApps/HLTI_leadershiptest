@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% block title %}{{ character.name }}{% endblock %}
+{% block body_class %}page-result type-{{ type_obj.key }}{% endblock %}
+
+{% block content %}
+<div class="stage stage--result">
+
+  <!-- 이 영역이 통째로 이미지로 저장됩니다 -->
+  <div class="result-sheet" id="result-sheet">
+
+    <header class="result-brand">
+      <p class="result-brand__mark">{{ brand.short_name }}</p>
+      <p class="result-brand__full">{{ brand.full_name }}</p>
+      <p class="result-brand__slogan">{{ brand.slogan }}</p>
+    </header>
+
+    <!-- 1. 캐릭터 -->
+    <section class="hero">
+      <p class="hero__label">{{ t('result.code_label') }}</p>
+      <div class="hero__art">
+        <img src="{{ asset('images/characters/' + character.image) }}"
+             alt="{{ character.name }}" width="280" height="280" decoding="async">
+      </div>
+      <h1 class="hero__name">{{ character.name }}</h1>
+      <p class="hero__meta">
+        <span class="chip chip--type">{{ type_obj.name }}</span>
+        <span class="chip">{{ t('result.competency_label') }} · {{ competency_label(character.competency) }}</span>
+      </p>
+    </section>
+
+    <!-- 2. 유형 설명 -->
+    <section class="block">
+      <h2 class="block__title">{{ t('result.type_section_title', { type_name: type_obj.name }) }}</h2>
+      <p class="block__body">{{ type_obj.description }}</p>
+    </section>
+
+    <!-- 3. 내 캐릭터 -->
+    <section class="block">
+      <h2 class="block__title">{{ t('result.character_section_title', { character_name: character.name }) }}</h2>
+      <p class="block__body">{{ character.intro }}</p>
+      <p class="block__body block__body--strength">{{ character.strength }}</p>
+    </section>
+
+    <!-- 4. 과해지면 -->
+    <section class="block block--caution">
+      <h2 class="block__title">{{ t('result.overuse_section_title') }}</h2>
+      <p class="block__subtitle">{{ type_obj.overuse_name }}</p>
+      <p class="block__body">{{ type_obj.overuse_description }}</p>
+      <p class="block__body block__body--divided">{{ character.caution }}</p>
+    </section>
+
+    <!-- 5. 성장 팁 -->
+    <section class="block block--tip">
+      <h2 class="block__title">{{ t('result.tip_section_title') }}</h2>
+      <p class="block__body">{{ character.tip }}</p>
+    </section>
+
+    <!-- 6. 보완 파트너 -->
+    {% if partner %}
+    <section class="block block--partner">
+      <h2 class="block__title">{{ t('result.partner_section_title') }}</h2>
+      <div class="partner">
+        <div class="partner__art">
+          <img src="{{ asset('images/characters/' + partner.image) }}"
+               alt="{{ partner.name }}" width="120" height="120" decoding="async">
+        </div>
+        <div class="partner__text">
+          <p class="partner__name">{{ partner.name }}</p>
+          <p class="block__body">{{ character.partner_message }}</p>
+        </div>
+      </div>
+    </section>
+    {% endif %}
+
+    <!-- 7. 함께 나타난 성향 -->
+    {% if companions | length %}
+    <section class="block block--companion">
+      <h2 class="block__title">{{ t('result.tie_section_title') }}</h2>
+      <p class="block__body">{{ t('result.tie_description') }}</p>
+      <ul class="companion-list">
+        {% for c in companions %}
+        <li>
+          <button type="button" class="companion" data-key="{{ c.key }}">
+            <img src="{{ asset('images/characters/' + c.image) }}"
+                 alt="" width="72" height="72" decoding="async">
+            <span>{{ c.name }}</span>
+          </button>
+        </li>
+        {% endfor %}
+      </ul>
+      <p class="companion-hint no-print">{{ t('result.companion_hint') }}</p>
+    </section>
+    {% endif %}
+
+    <!-- 8. 예측 vs 결과 -->
+    {% if compare %}
+    <section class="block block--compare">
+      <h2 class="block__title">{{ t('compare.section_title') }}</h2>
+      <div class="compare">
+        <div class="compare__side">
+          <p class="compare__label">{{ t('compare.predicted_label') }}</p>
+          <div class="compare__art">
+            <img src="{{ asset('images/characters/' + compare.predicted.image) }}"
+                 alt="{{ compare.predicted.name }}" width="140" height="140" decoding="async">
+          </div>
+          <p class="compare__name">{{ compare.predicted.name }}</p>
+        </div>
+        <div class="compare__vs" aria-hidden="true">
+          <span class="compare__vs-mark">VS</span>
+        </div>
+        <div class="compare__side compare__side--result">
+          <p class="compare__label">{{ t('compare.result_label') }}</p>
+          <div class="compare__art">
+            <img src="{{ asset('images/characters/' + character.image) }}"
+                 alt="{{ character.name }}" width="140" height="140" decoding="async">
+          </div>
+          <p class="compare__name">{{ character.name }}</p>
+        </div>
+      </div>
+      <p class="compare__message compare__message--{{ compare.verdict }}">
+        {{ compare.message|nl2br }}
+      </p>
+    </section>
+    {% endif %}
+
+    <!-- 9. 하단 안내 -->
+    <footer class="result-disclaimer">
+      <p>{{ t('result.disclaimer') }}</p>
+    </footer>
+
+  </div>
+
+  {% if companions | length %}
+  <dialog class="sheet no-print" id="companion-dialog" aria-labelledby="companion-name">
+    <button type="button" class="sheet__close" id="companion-close"
+            aria-label="{{ t('result.close') }}">×</button>
+    <div class="sheet__art">
+      <img src="" alt="" id="companion-image" width="200" height="200" decoding="async">
+    </div>
+    <h3 class="sheet__name" id="companion-name"></h3>
+    <p class="sheet__meta" id="companion-meta"></p>
+    <p class="sheet__body" id="companion-intro"></p>
+    <p class="sheet__body sheet__body--strength" id="companion-strength"></p>
+  </dialog>
+  {% endif %}
+
+  <div class="result-actions no-print">
+    <button class="btn btn--primary" type="button" id="save-image">
+      {{ t('result.save_image') }}
+    </button>
+    <button class="btn btn--ghost" type="button" id="print-result">
+      {{ t('result.print') }}
+    </button>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="application/json" id="result-config">
+  {{ {
+      "filename": brand.download_filename.replace('{name}', participant_name or character.name),
+      "saving": t('result.saving'),
+      "failed": t('result.save_failed'),
+      "saveLabel": t('result.save_image')
+  }| json_script }}
+</script>
+{% if companions | length %}
+<script type="application/json" id="companion-data">
+  {{ companion_data | json_script }}
+</script>
+{% endif %}
+<script src="{{ asset('js/html2canvas.min.js') }}" defer></script>
+<script src="{{ asset('js/result.js') }}" defer></script>
+{% endblock %}

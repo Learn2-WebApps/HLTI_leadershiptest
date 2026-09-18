@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}로그인{% endblock %}
+{% block body_class %}page-login{% endblock %}
+
+{% block content %}
+<div class="stage stage--narrow">
+
+  <header class="brand">
+    <p class="brand__mark">{{ brand.short_name }}</p>
+    <h1 class="brand__full">{{ brand.full_name }}</h1>
+    <p class="brand__slogan">{{ brand.slogan }}</p>
+  </header>
+
+  <section class="card card--intro">
+    <p class="intro-text">{{ t('login.intro')|nl2br }}</p>
+    <p class="intro-duration">{{ t('login.duration_notice') }}</p>
+
+    <div class="how-to">
+      <h2 class="how-to__title">{{ t('login.how_to_title') }}</h2>
+      <ol class="how-to__list">
+        {% for step in texts.login.how_to %}
+        <li>{{ step }}</li>
+        {% endfor %}
+      </ol>
+    </div>
+  </section>
+
+  <form class="card card--form" method="post" action="/" novalidate>
+    <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+
+    {% if error %}
+    <p class="form-error" role="alert">{{ error }}</p>
+    {% endif %}
+
+    <div class="field">
+      <label class="field__label" for="code">{{ t('login.code_label') }}</label>
+      <input class="field__input field__input--code" id="code" name="code"
+             type="text" inputmode="numeric" pattern="[0-9]{4}" maxlength="4"
+             autocomplete="off" required
+             placeholder="{{ t('login.code_placeholder') }}"
+             value="{{ form.code or '' }}">
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="name">{{ t('login.name_label') }}</label>
+      <input class="field__input" id="name" name="name" type="text"
+             maxlength="20" autocomplete="off" required
+             placeholder="{{ t('login.name_placeholder') }}"
+             value="{{ form.name or '' }}">
+    </div>
+
+    <button class="btn btn--primary btn--block" type="submit">
+      {{ t('login.submit') }}
+    </button>
+  </form>
+
+  <div class="admin-entry">
+    <a class="admin-entry__link" href="/admin">
+      <span class="admin-entry__icon" aria-hidden="true">⚙</span>
+      {{ t('login.admin_link') }}
+    </a>
+  </div>
+
+</div>
+{% endblock %}

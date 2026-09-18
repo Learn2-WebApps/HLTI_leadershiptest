@@ -1,0 +1,23 @@
+{
+  "name": "hlti",
+  "version": "1.0.0",
+  "private": true,
+  "description": "HLTI; Hyundai Leadership Type Indicator — 제조 현장 파트장 리더십 유형 진단",
+  "type": "commonjs",
+  "main": "server.js",
+  "engines": {
+    "node": ">=20.11"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch-path=server.js --watch-path=lib --watch-path=routes --watch-path=templates --watch-path=data server.js",
+    "test": "node --test \"tests/**/*.test.js\""
+  },
+  "dependencies": {
+    "better-sqlite3": "^13.0.3",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "nunjucks": "^3.2.4"
+  }
+}

@@ -1,0 +1,148 @@
+{
+  "instruction": "각 상황에서 파트장인 내가 '가장 먼저 할 행동'과 '가장 나중에 할 행동'을 하나씩 고르세요. 정답은 없습니다. 평소 나의 모습에 가장 가까운 것을 고르세요.",
+  "questions": [
+    {
+      "id": "p1_q1",
+      "area": "작업 관리",
+      "situation": "설비 고장으로 한 공정이 2시간 멈췄다. 오늘 물량은 그대로 맞춰야 한다.",
+      "options": [
+        { "id": "a", "text": "파트원들에게 상황을 공유하고, 공정끼리 일손을 나누자고 제안한다.", "type": "connector", "competency": "teamwork" },
+        { "id": "b", "text": "고장 원인과 복구 시간을 확인하고, 멈춘 동안 돌릴 작업 순서를 다시 짠다.", "type": "master", "competency": "problem_solving" },
+        { "id": "c", "text": "파트원별로 남은 시간 동안 맡을 공정과 목표량을 정해 알려준다.", "type": "driver", "competency": "clear_direction" },
+        { "id": "d", "text": "설비가 멈춰도 흔들리지 않도록 대응 방식을 새로 만들자고 제안한다.", "type": "creator", "competency": "change_management" }
+      ]
+    },
+    {
+      "id": "p1_q2",
+      "area": "작업 관리",
+      "situation": "다음 달부터 신규 모델 생산이 시작된다. 파트원들은 아직 작업 방법이 낯설다.",
+      "options": [
+        { "id": "a", "text": "신규 모델의 품질 기준과 검사 포인트부터 꼼꼼히 확인해 정리한다.", "type": "master", "competency": "quality_focus" },
+        { "id": "b", "text": "내가 먼저 신규 작업을 익혀 파트원들 앞에서 직접 시범을 보인다.", "type": "driver", "competency": "leading_by_example" },
+        { "id": "c", "text": "신규 모델이 우리 파트에 어떤 의미인지, 어떤 모습을 목표로 할지 공유한다.", "type": "creator", "competency": "vision_sharing" },
+        { "id": "d", "text": "파트원들이 새 작업에 대해 느끼는 부담과 걱정을 먼저 들어본다.", "type": "connector", "competency": "trust_building" }
+      ]
+    },
+    {
+      "id": "p1_q3",
+      "area": "작업 관리",
+      "situation": "비효율적인 공정 순서가 계속 눈에 띈다. 파트원들은 \"원래 이렇게 해왔다\"고 한다.",
+      "options": [
+        { "id": "a", "text": "파트장 권한으로 공정 순서를 바꾸기로 결정하고 바로 적용한다.", "type": "driver", "competency": "authority" },
+        { "id": "b", "text": "\"원래 그렇다\"는 분위기를 바꾸기 위해 개선 아이디어를 편하게 내는 자리를 만든다.", "type": "creator", "competency": "culture_management" },
+        { "id": "c", "text": "파트원들이 스스로 개선점을 찾을 수 있도록 방법을 알려주고 기회를 준다.", "type": "connector", "competency": "development" },
+        { "id": "d", "text": "공정별 작업 시간과 대기 시간을 기록해 문제 구간을 데이터로 확인한다.", "type": "master", "competency": "information" }
+      ]
+    },
+    {
+      "id": "p1_q4",
+      "area": "작업 관리",
+      "situation": "작업 지시가 늦어 30분째 대기 중이고, 파트원끼리 서로 탓하는 말이 오간다.",
+      "options": [
+        { "id": "a", "text": "지시 지연이 반복되지 않도록 전달 방식을 바꾸자고 그룹장에게 제안한다.", "type": "creator", "competency": "change_management" },
+        { "id": "b", "text": "서로 탓하는 파트원들 사이에서 오해를 풀고 감정이 커지지 않게 조율한다.", "type": "connector", "competency": "conflict_management" },
+        { "id": "c", "text": "대기하는 동안 어제 작업에서 잘된 점과 고칠 점을 파트원별로 짚어준다.", "type": "master", "competency": "timely_feedback" },
+        { "id": "d", "text": "내가 먼저 설비 점검과 자재 준비를 시작해 파트원들이 함께 움직이게 한다.", "type": "driver", "competency": "leading_by_example" }
+      ]
+    },
+    {
+      "id": "p1_q5",
+      "area": "인원 관리",
+      "situation": "성실하던 파트원 A가 최근 실수가 잦아졌다.",
+      "options": [
+        { "id": "a", "text": "A를 따로 불러 요즘 힘든 일이 있는지 편하게 이야기를 들어본다.", "type": "connector", "competency": "trust_building" },
+        { "id": "b", "text": "A의 실수를 구체적으로 짚어주고, 어떻게 고치면 되는지 바로 알려준다.", "type": "master", "competency": "timely_feedback" },
+        { "id": "c", "text": "실수가 줄 때까지 A를 부담이 덜한 공정으로 재배치한다.", "type": "driver", "competency": "authority" },
+        { "id": "d", "text": "실수를 숨기지 않고 함께 원인을 찾는 파트 분위기를 만든다.", "type": "creator", "competency": "culture_management" }
+      ]
+    },
+    {
+      "id": "p1_q6",
+      "area": "인원 관리",
+      "situation": "파트원 B와 C가 작업 분담 문제로 언성을 높였다.",
+      "options": [
+        { "id": "a", "text": "두 사람의 실제 작업량과 분담 현황을 확인해 사실관계부터 파악한다.", "type": "master", "competency": "information" },
+        { "id": "b", "text": "두 사람이 맡을 업무 범위를 다시 분명하게 정해준다.", "type": "driver", "competency": "clear_direction" },
+        { "id": "c", "text": "우리 파트가 함께 지향하는 모습을 다시 이야기하며 협력할 이유를 짚어준다.", "type": "creator", "competency": "vision_sharing" },
+        { "id": "d", "text": "두 사람의 이야기를 각각 듣고, 서로 납득할 해결점을 함께 찾는다.", "type": "connector", "competency": "conflict_management" }
+      ]
+    },
+    {
+      "id": "p1_q7",
+      "area": "인원 관리",
+      "situation": "숙련 파트원 E가 다음 주 다른 파트로 옮기게 되었다.",
+      "options": [
+        { "id": "a", "text": "당분간 E의 공정에 내가 직접 들어가 빈자리를 메운다.", "type": "driver", "competency": "leading_by_example" },
+        { "id": "b", "text": "한 사람이 빠져도 흔들리지 않도록 공정 운영 방식을 새로 바꾼다.", "type": "creator", "competency": "change_management" },
+        { "id": "c", "text": "남은 파트원들이 E의 업무를 함께 나눠 맡도록 뜻을 모은다.", "type": "connector", "competency": "teamwork" },
+        { "id": "d", "text": "E의 공정에서 생길 수 있는 문제를 미리 짚고 인수인계 계획을 세운다.", "type": "master", "competency": "problem_solving" }
+      ]
+    },
+    {
+      "id": "p1_q8",
+      "area": "인원 관리",
+      "situation": "입사 3개월 차 신입 D가 작업 속도를 따라가지 못해 위축되어 있다.",
+      "options": [
+        { "id": "a", "text": "신입도 편하게 묻고 서로 가르쳐 주는 것이 당연한 파트 문화를 만든다.", "type": "creator", "competency": "culture_management" },
+        { "id": "b", "text": "D에게 맞는 단계별 학습 계획을 세우고 숙련자와 짝을 지어준다.", "type": "connector", "competency": "development" },
+        { "id": "c", "text": "속도보다 정확성이 먼저라고 강조하고, 작업 기준을 지키는지 확인해 준다.", "type": "master", "competency": "quality_focus" },
+        { "id": "d", "text": "D의 숙련도에 맞는 공정으로 배치를 조정한다.", "type": "driver", "competency": "authority" }
+      ]
+    },
+    {
+      "id": "p1_q9",
+      "area": "품질 관리",
+      "situation": "고객사 품질 불만이 접수되자, 앞뒤 공정끼리 서로 책임을 미루고 있다.",
+      "options": [
+        { "id": "a", "text": "공정별 입장을 들어보고, 책임 공방이 아닌 해결에 집중하도록 조율한다.", "type": "connector", "competency": "conflict_management" },
+        { "id": "b", "text": "불량품과 검사 기록을 꼼꼼히 대조해 기준에서 벗어난 부분을 찾는다.", "type": "master", "competency": "quality_focus" },
+        { "id": "c", "text": "당장 강화할 검사 항목과 담당자를 정해 지시한다.", "type": "driver", "competency": "clear_direction" },
+        { "id": "d", "text": "고객이 믿고 찾는 파트가 되자는 목표를 다시 공유한다.", "type": "creator", "competency": "vision_sharing" }
+      ]
+    },
+    {
+      "id": "p1_q10",
+      "area": "품질 관리",
+      "situation": "같은 유형의 불량이 이번 주에만 세 번째 발생했다.",
+      "options": [
+        { "id": "a", "text": "불량이 생기는 조건을 좁혀 가며 원인을 찾고 임시 조치를 한다.", "type": "master", "competency": "problem_solving" },
+        { "id": "b", "text": "원인이 확인될 때까지 해당 공정을 멈추기로 결정한다.", "type": "driver", "competency": "authority" },
+        { "id": "c", "text": "반복 불량을 막을 새로운 작업 방식을 도입한다.", "type": "creator", "competency": "change_management" },
+        { "id": "d", "text": "해당 작업자가 원인을 이해하고 스스로 개선할 수 있도록 코칭한다.", "type": "connector", "competency": "development" }
+      ]
+    },
+    {
+      "id": "p1_q11",
+      "area": "품질 관리",
+      "situation": "납기가 촉박해 파트원들 사이에서 \"검사를 조금 줄이자\"는 말이 나온다.",
+      "options": [
+        { "id": "a", "text": "내가 직접 검사 작업에 들어가 속도를 보탠다.", "type": "driver", "competency": "leading_by_example" },
+        { "id": "b", "text": "바빠도 품질은 타협하지 않는 것이 우리 파트의 방식이라는 인식을 다진다.", "type": "creator", "competency": "culture_management" },
+        { "id": "c", "text": "납기 압박에 지친 파트원들의 마음을 먼저 헤아리고 격려한다.", "type": "connector", "competency": "trust_building" },
+        { "id": "d", "text": "검사를 건너뛰려는 행동이 보이면 그 자리에서 바로 짚어준다.", "type": "master", "competency": "timely_feedback" }
+      ]
+    },
+    {
+      "id": "p1_q12",
+      "area": "품질 관리",
+      "situation": "다음 달 품질 감사가 예정되어 있고, 준비할 것이 많다.",
+      "options": [
+        { "id": "a", "text": "이번 감사를 통해 우리 파트가 어떤 모습을 보여주고 싶은지 함께 이야기한다.", "type": "creator", "competency": "vision_sharing" },
+        { "id": "b", "text": "파트원들이 서로 부족한 부분을 채워주며 함께 준비하도록 이끈다.", "type": "connector", "competency": "teamwork" },
+        { "id": "c", "text": "감사 요구사항과 지난 지적 사항을 모아 정리하고 공유한다.", "type": "master", "competency": "information" },
+        { "id": "d", "text": "준비 항목별 담당자와 마감일을 정해 전달한다.", "type": "driver", "competency": "clear_direction" }
+      ]
+    }
+  ],
+  "tiebreaker": {
+    "id": "p1_tie",
+    "instruction": "가장 먼저 집중할 것 하나만 고르세요.",
+    "situation": "이번 주 파트 운영에서 한 가지에만 집중할 수 있다면, 무엇에 가장 먼저 집중하겠습니까?",
+    "options": [
+      { "id": "a", "text": "파트원들이 서로 돕고 믿는 분위기를 다지는 데 집중한다.", "type": "connector" },
+      { "id": "b", "text": "더 나은 작업 방식을 찾아 새롭게 시도하는 데 집중한다.", "type": "creator" },
+      { "id": "c", "text": "작업 기준과 품질이 흔들리지 않도록 점검하는 데 집중한다.", "type": "master" },
+      { "id": "d", "text": "목표를 분명히 하고 앞장서서 성과를 내는 데 집중한다.", "type": "driver" }
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <meta name="robots" content="noindex, nofollow">
+  <title>{% block title %}{{ brand.short_name }}{% endblock %} · {{ brand.page_title_suffix }}</title>
+  <link rel="icon" href="{{ asset('images/favicon.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <div class="app-shell">
+    {% block progress %}{% endblock %}
+    <main class="app-main" id="main">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,311 @@
+{
+  "instruction": "각 상황에서 파트장인 내가 '가장 먼저 할 행동'과 '가장 나중에 할 행동'을 하나씩 고르세요.",
+  "sets": {
+    "connector": {
+      "questions": [
+        {
+          "id": "p2_con_q1",
+          "area": "작업 관리",
+          "situation": "급한 추가 물량이 들어와 파트원들이 지쳐 보인다.",
+          "options": [
+            { "id": "a", "text": "파트원들이 서로 공정을 도우며 함께 끝내도록 역할을 나누자고 제안한다.", "competency": "teamwork" },
+            { "id": "b", "text": "지친 파트원들에게 먼저 다가가 컨디션과 어려운 점을 묻는다.", "competency": "trust_building" },
+            { "id": "c", "text": "누가 더 많이 하느냐로 불만이 생기지 않게 미리 의견을 조율한다.", "competency": "conflict_management" },
+            { "id": "d", "text": "숙련이 덜한 파트원이 이번 기회에 새 공정을 익히도록 옆에서 가르친다.", "competency": "development" }
+          ]
+        },
+        {
+          "id": "p2_con_q2",
+          "area": "작업 관리",
+          "situation": "새 작업 표준이 내려왔는데, 파트원마다 이해도 차이가 크다.",
+          "options": [
+            { "id": "a", "text": "이해가 부족한 파트원에게 단계별로 설명하고 연습할 기회를 준다.", "competency": "development" },
+            { "id": "b", "text": "이해가 빠른 파트원과 느린 파트원이 짝을 지어 함께 익히게 한다.", "competency": "teamwork" },
+            { "id": "c", "text": "새 표준에 대해 파트원들이 느끼는 부담을 편하게 말하도록 들어준다.", "competency": "trust_building" },
+            { "id": "d", "text": "적용 방식을 두고 의견이 갈리면 양쪽 입장을 들어 합의점을 찾는다.", "competency": "conflict_management" }
+          ]
+        },
+        {
+          "id": "p2_con_q3",
+          "area": "인원 관리",
+          "situation": "파트원 F가 회의 때마다 말이 없고 혼자 겉도는 것 같다.",
+          "options": [
+            { "id": "a", "text": "F와 다른 파트원 사이에 불편한 일이 있었는지 확인하고 풀어준다.", "competency": "conflict_management" },
+            { "id": "b", "text": "F가 잘할 수 있는 업무를 맡기고 성장할 수 있도록 지원한다.", "competency": "development" },
+            { "id": "c", "text": "F가 팀 활동에 자연스럽게 참여하도록 함께할 역할을 만든다.", "competency": "teamwork" },
+            { "id": "d", "text": "F를 따로 만나 요즘 어떤지 편하게 이야기를 들어본다.", "competency": "trust_building" }
+          ]
+        },
+        {
+          "id": "p2_con_q4",
+          "area": "인원 관리",
+          "situation": "고참 G와 저년차 H가 작업 방식을 두고 자주 부딪힌다.",
+          "options": [
+            { "id": "a", "text": "G와 H 각각에게 평소 느끼는 점을 들어주며 신뢰를 쌓는다.", "competency": "trust_building" },
+            { "id": "b", "text": "두 사람을 함께 불러 서로의 입장을 이해하고 조율하도록 돕는다.", "competency": "conflict_management" },
+            { "id": "c", "text": "G의 노하우를 H가 체계적으로 배울 수 있도록 학습 기회를 만든다.", "competency": "development" },
+            { "id": "d", "text": "두 사람이 같은 목표를 위해 협력해야 하는 과제를 함께 맡긴다.", "competency": "teamwork" }
+          ]
+        },
+        {
+          "id": "p2_con_q5",
+          "area": "품질 관리",
+          "situation": "불량이 나오자 파트원들이 서로 눈치를 보며 위축되어 있다.",
+          "options": [
+            { "id": "a", "text": "불량은 파트 모두의 문제라며 함께 대책을 세우자고 뜻을 모은다.", "competency": "teamwork" },
+            { "id": "b", "text": "위축된 파트원들을 다독이며 솔직하게 말해도 괜찮다고 안심시킨다.", "competency": "trust_building" },
+            { "id": "c", "text": "누구 책임인지를 두고 생긴 서운함과 오해를 풀어준다.", "competency": "conflict_management" },
+            { "id": "d", "text": "불량을 계기로 파트원들이 품질 지식을 배울 수 있게 교육한다.", "competency": "development" }
+          ]
+        },
+        {
+          "id": "p2_con_q6",
+          "area": "품질 관리",
+          "situation": "검사 담당 I가 품질 판정을 자신 없어 한다.",
+          "options": [
+            { "id": "a", "text": "I가 판정 기준을 익힐 수 있도록 사례를 보여주며 가르친다.", "competency": "development" },
+            { "id": "b", "text": "애매한 판정은 동료들과 함께 확인하도록 협업 체계를 만든다.", "competency": "teamwork" },
+            { "id": "c", "text": "I가 부담을 느끼는 부분을 들어주고, 믿고 맡긴다는 마음을 전한다.", "competency": "trust_building" },
+            { "id": "d", "text": "판정 결과를 두고 앞뒤 공정과 마찰이 생기지 않게 중간에서 조율한다.", "competency": "conflict_management" }
+          ]
+        }
+      ],
+      "tiebreaker": {
+        "id": "p2_con_tie",
+        "situation": "파트장으로서 한 가지를 가장 잘하고 싶다면, 무엇을 고르겠습니까?",
+        "options": [
+          { "id": "a", "text": "파트원들이 서로 도우며 함께 일하게 하는 것", "competency": "teamwork" },
+          { "id": "b", "text": "파트원들이 나를 믿고 속마음을 꺼내게 하는 것", "competency": "trust_building" },
+          { "id": "c", "text": "파트원 사이의 갈등을 잘 풀어내는 것", "competency": "conflict_management" },
+          { "id": "d", "text": "파트원들의 실력을 키워주는 것", "competency": "development" }
+        ]
+      }
+    },
+    "master": {
+      "questions": [
+        {
+          "id": "p2_mas_q1",
+          "area": "작업 관리",
+          "situation": "오늘부터 새 작업 표준서가 적용된다.",
+          "options": [
+            { "id": "a", "text": "표준서대로 작업이 이뤄지는지 공정을 돌며 꼼꼼히 확인한다.", "competency": "quality_focus" },
+            { "id": "b", "text": "표준서 적용 과정에서 생기는 문제를 바로 찾아 조치한다.", "competency": "problem_solving" },
+            { "id": "c", "text": "바뀐 내용을 정리해 파트원 모두가 알 수 있게 공유한다.", "competency": "information" },
+            { "id": "d", "text": "표준서와 다르게 작업하는 모습이 보이면 그 자리에서 알려준다.", "competency": "timely_feedback" }
+          ]
+        },
+        {
+          "id": "p2_mas_q2",
+          "area": "작업 관리",
+          "situation": "최근 생산량이 조금씩 줄고 있다.",
+          "options": [
+            { "id": "a", "text": "작업 속도가 떨어진 파트원에게 관찰한 내용을 바로 전달한다.", "competency": "timely_feedback" },
+            { "id": "b", "text": "생산량이 줄면서 작업 기준이 흐트러지지 않았는지 점검한다.", "competency": "quality_focus" },
+            { "id": "c", "text": "생산량이 줄어든 원인을 공정별로 좁혀 가며 찾는다.", "competency": "problem_solving" },
+            { "id": "d", "text": "공정별 생산 실적을 모아 추이를 확인하고 파트원들과 공유한다.", "competency": "information" }
+          ]
+        },
+        {
+          "id": "p2_mas_q3",
+          "area": "인원 관리",
+          "situation": "파트원 J가 교대 후 인수인계를 자주 빠뜨린다.",
+          "options": [
+            { "id": "a", "text": "누락 사례를 모아 어떤 정보가 빠지는지 파악하고 공유한다.", "competency": "information" },
+            { "id": "b", "text": "누락이 생긴 직후 J에게 무엇이 빠졌는지 바로 알려준다.", "competency": "timely_feedback" },
+            { "id": "c", "text": "인수인계 항목이 기준대로 채워지는지 매번 확인한다.", "competency": "quality_focus" },
+            { "id": "d", "text": "누락이 반복되는 원인을 찾아 해결 방법을 마련한다.", "competency": "problem_solving" }
+          ]
+        },
+        {
+          "id": "p2_mas_q4",
+          "area": "인원 관리",
+          "situation": "파트원 K의 작업 결과를 두고 사람마다 평가가 엇갈린다.",
+          "options": [
+            { "id": "a", "text": "K의 작업에서 실제로 무엇이 문제인지 원인을 파고든다.", "competency": "problem_solving" },
+            { "id": "b", "text": "여러 사람의 의견과 작업 기록을 모아 사실을 확인한다.", "competency": "information" },
+            { "id": "c", "text": "K에게 지금까지 관찰한 잘된 점과 고칠 점을 구체적으로 바로 전달한다.", "competency": "timely_feedback" },
+            { "id": "d", "text": "K의 작업물이 품질 기준에 맞는지 직접 확인한다.", "competency": "quality_focus" }
+          ]
+        },
+        {
+          "id": "p2_mas_q5",
+          "area": "품질 관리",
+          "situation": "다음 공정에서 우리 파트 제품의 치수가 조금씩 벗어난다는 연락이 왔다.",
+          "options": [
+            { "id": "a", "text": "출하 전 치수 검사를 더 촘촘히 해서 기준을 벗어난 제품을 거른다.", "competency": "quality_focus" },
+            { "id": "b", "text": "치수가 벗어나는 원인을 찾아 설비와 작업 방법을 조치한다.", "competency": "problem_solving" },
+            { "id": "c", "text": "다음 공정의 측정 데이터를 받아 우리 기록과 비교하고 공유한다.", "competency": "information" },
+            { "id": "d", "text": "해당 작업자에게 확인된 문제를 바로 알려 바로잡게 한다.", "competency": "timely_feedback" }
+          ]
+        },
+        {
+          "id": "p2_mas_q6",
+          "area": "품질 관리",
+          "situation": "신입 파트원이 작업은 빠르지만 마무리가 꼼꼼하지 않다.",
+          "options": [
+            { "id": "a", "text": "마무리가 부족한 부분이 보일 때마다 그 자리에서 짚어준다.", "competency": "timely_feedback" },
+            { "id": "b", "text": "신입의 작업물을 품질 기준에 맞춰 한 번 더 확인한다.", "competency": "quality_focus" },
+            { "id": "c", "text": "마무리가 부족해지는 원인을 찾아 개선 방법을 정한다.", "competency": "problem_solving" },
+            { "id": "d", "text": "자주 놓치는 마무리 항목을 정리해 파트 전체에 공유한다.", "competency": "information" }
+          ]
+        }
+      ],
+      "tiebreaker": {
+        "id": "p2_mas_tie",
+        "situation": "파트장으로서 한 가지를 가장 잘하고 싶다면, 무엇을 고르겠습니까?",
+        "options": [
+          { "id": "a", "text": "작업이 기준대로 이뤄지게 하는 것", "competency": "quality_focus" },
+          { "id": "b", "text": "문제의 원인을 찾아 해결하는 것", "competency": "problem_solving" },
+          { "id": "c", "text": "필요한 정보를 모아 정확히 공유하는 것", "competency": "information" },
+          { "id": "d", "text": "필요한 순간에 바로 짚어주는 것", "competency": "timely_feedback" }
+        ]
+      }
+    },
+    "driver": {
+      "questions": [
+        {
+          "id": "p2_dri_q1",
+          "area": "작업 관리",
+          "situation": "월말 마감까지 이틀 남았는데 물량이 밀려 있다.",
+          "options": [
+            { "id": "a", "text": "내가 먼저 라인에 들어가 가장 바쁜 공정을 맡는다.", "competency": "leading_by_example" },
+            { "id": "b", "text": "남은 물량을 일별·사람별로 나눠 누가 무엇을 할지 분명히 알려준다.", "competency": "clear_direction" },
+            { "id": "c", "text": "우선 처리할 제품을 결정하고 인원을 바쁜 공정으로 재배치한다.", "competency": "authority" }
+          ]
+        },
+        {
+          "id": "p2_dri_q2",
+          "area": "작업 관리",
+          "situation": "설비 교체 작업과 생산 일정이 같은 날 겹쳤다.",
+          "options": [
+            { "id": "a", "text": "어느 작업을 먼저 할지 결정하고 인원을 나눠 배치한다.", "competency": "authority" },
+            { "id": "b", "text": "가장 까다로운 교체 작업에 내가 직접 참여한다.", "competency": "leading_by_example" },
+            { "id": "c", "text": "교체 조와 생산 조 각각의 할 일과 완료 시점을 분명히 전달한다.", "competency": "clear_direction" }
+          ]
+        },
+        {
+          "id": "p2_dri_q3",
+          "area": "인원 관리",
+          "situation": "파트원 두 명이 같은 날 휴가를 신청했다.",
+          "options": [
+            { "id": "a", "text": "휴가 기간 동안 남은 파트원별로 맡을 업무를 분명히 정해 알려준다.", "competency": "clear_direction" },
+            { "id": "b", "text": "생산 일정을 따져 휴가 승인 여부와 일정을 결정한다.", "competency": "authority" },
+            { "id": "c", "text": "빈자리가 생기는 날에는 내가 직접 작업에 들어간다.", "competency": "leading_by_example" }
+          ]
+        },
+        {
+          "id": "p2_dri_q4",
+          "area": "인원 관리",
+          "situation": "파트원들이 힘든 공정을 서로 맡지 않으려 한다.",
+          "options": [
+            { "id": "a", "text": "내가 먼저 힘든 공정을 맡아 본보기를 보인다.", "competency": "leading_by_example" },
+            { "id": "b", "text": "힘든 공정에서 해야 할 일과 기준을 구체적으로 설명해 부담을 줄인다.", "competency": "clear_direction" },
+            { "id": "c", "text": "파트장 권한으로 순번을 정해 모두가 돌아가며 맡도록 결정한다.", "competency": "authority" }
+          ]
+        },
+        {
+          "id": "p2_dri_q5",
+          "area": "품질 관리",
+          "situation": "품질 문제로 재작업 물량이 생겼다.",
+          "options": [
+            { "id": "a", "text": "재작업을 누구에게 맡기고 생산은 어떻게 돌릴지 바로 결정한다.", "competency": "authority" },
+            { "id": "b", "text": "내가 먼저 재작업에 들어가 기준대로 처리하는 모습을 보인다.", "competency": "leading_by_example" },
+            { "id": "c", "text": "재작업 방법과 완료 기준, 마감 시간을 분명히 알려준다.", "competency": "clear_direction" }
+          ]
+        },
+        {
+          "id": "p2_dri_q6",
+          "area": "품질 관리",
+          "situation": "한 제품군의 검사 합격률이 목표보다 낮다.",
+          "options": [
+            { "id": "a", "text": "합격률 목표와 각자 지켜야 할 작업 포인트를 분명히 전달한다.", "competency": "clear_direction" },
+            { "id": "b", "text": "합격률이 오를 때까지 숙련자를 해당 제품군에 우선 배치하기로 결정한다.", "competency": "authority" },
+            { "id": "c", "text": "내가 해당 제품군 작업에 직접 들어가 기준을 지키는 모습을 보인다.", "competency": "leading_by_example" }
+          ]
+        }
+      ],
+      "tiebreaker": {
+        "id": "p2_dri_tie",
+        "situation": "파트장으로서 한 가지를 가장 잘하고 싶다면, 무엇을 고르겠습니까?",
+        "options": [
+          { "id": "a", "text": "앞장서서 먼저 움직이는 것", "competency": "leading_by_example" },
+          { "id": "b", "text": "할 일과 기준을 분명하게 전달하는 것", "competency": "clear_direction" },
+          { "id": "c", "text": "필요한 결정을 내리고 사람을 배치하는 것", "competency": "authority" }
+        ]
+      }
+    },
+    "creator": {
+      "questions": [
+        {
+          "id": "p2_cre_q1",
+          "area": "작업 관리",
+          "situation": "회사가 우리 파트에 자동화 설비를 도입하기로 했다.",
+          "options": [
+            { "id": "a", "text": "새 설비가 현장에 자리 잡도록 단계별 적용 계획을 세워 이끈다.", "competency": "change_management" },
+            { "id": "b", "text": "새 설비로 우리 파트가 어떻게 달라질지 그림을 그려 공유한다.", "competency": "vision_sharing" },
+            { "id": "c", "text": "새 기술을 배우고 시도하는 것을 반기는 분위기를 만든다.", "competency": "culture_management" }
+          ]
+        },
+        {
+          "id": "p2_cre_q2",
+          "area": "작업 관리",
+          "situation": "파트원들이 늘 하던 방식만 고집해 개선 제안이 거의 없다.",
+          "options": [
+            { "id": "a", "text": "작은 개선 제안도 인정받는 분위기를 만든다.", "competency": "culture_management" },
+            { "id": "b", "text": "효과가 확실한 개선안 하나를 골라 먼저 도입해 본다.", "competency": "change_management" },
+            { "id": "c", "text": "개선을 통해 우리 파트가 어떤 모습이 되고 싶은지 이야기한다.", "competency": "vision_sharing" }
+          ]
+        },
+        {
+          "id": "p2_cre_q3",
+          "area": "인원 관리",
+          "situation": "파트원들이 \"열심히 해도 달라지는 게 없다\"며 의욕을 잃었다.",
+          "options": [
+            { "id": "a", "text": "우리 파트가 나아갈 방향과 각자의 일이 어떤 의미인지 이야기한다.", "competency": "vision_sharing" },
+            { "id": "b", "text": "서로의 노력을 알아주고 인정하는 것이 자연스러운 문화를 만든다.", "competency": "culture_management" },
+            { "id": "c", "text": "불필요한 일을 줄이도록 일하는 방식을 바꿔 본다.", "competency": "change_management" }
+          ]
+        },
+        {
+          "id": "p2_cre_q4",
+          "area": "인원 관리",
+          "situation": "새로 들어온 파트원들이 기존 방식에 적응하기 어려워한다.",
+          "options": [
+            { "id": "a", "text": "신입 적응 과정을 새롭게 설계해 적용한다.", "competency": "change_management" },
+            { "id": "b", "text": "우리 파트가 중요하게 여기는 가치와 목표를 신입에게 설명한다.", "competency": "vision_sharing" },
+            { "id": "c", "text": "신입도 편하게 묻고 의견을 낼 수 있는 것이 당연한 분위기를 만든다.", "competency": "culture_management" }
+          ]
+        },
+        {
+          "id": "p2_cre_q5",
+          "area": "품질 관리",
+          "situation": "회사가 새 품질 관리 제도를 도입했지만 현장에 잘 퍼지지 않는다.",
+          "options": [
+            { "id": "a", "text": "새 제도를 지키는 것이 당연한 일하는 방식으로 자리 잡게 한다.", "competency": "culture_management" },
+            { "id": "b", "text": "제도가 현장에 맞게 적용되도록 단계별로 바꿔 나간다.", "competency": "change_management" },
+            { "id": "c", "text": "새 제도가 왜 필요한지, 지키면 무엇이 좋아지는지 설명한다.", "competency": "vision_sharing" }
+          ]
+        },
+        {
+          "id": "p2_cre_q6",
+          "area": "품질 관리",
+          "situation": "우리 파트가 불량률 개선 시범 파트로 선정되었다.",
+          "options": [
+            { "id": "a", "text": "시범 파트로서 우리가 이루고 싶은 모습을 파트원들과 공유한다.", "competency": "vision_sharing" },
+            { "id": "b", "text": "불량을 숨기지 않고 드러내 함께 개선하는 문화를 만든다.", "competency": "culture_management" },
+            { "id": "c", "text": "새로운 불량 관리 방식을 도입해 현장에 정착시킨다.", "competency": "change_management" }
+          ]
+        }
+      ],
+      "tiebreaker": {
+        "id": "p2_cre_tie",
+        "situation": "파트장으로서 한 가지를 가장 잘하고 싶다면, 무엇을 고르겠습니까?",
+        "options": [
+          { "id": "a", "text": "새로운 방식을 현장에 정착시키는 것", "competency": "change_management" },
+          { "id": "b", "text": "파트가 나아갈 방향을 공유하는 것", "competency": "vision_sharing" },
+          { "id": "c", "text": "바람직한 일하는 분위기를 만드는 것", "competency": "culture_management" }
+        ]
+      }
+    }
+  }
+}

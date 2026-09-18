@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}{{ t('admin.title') }}{% endblock %}
+{% block body_class %}page-admin page-admin-login{% endblock %}
+
+{% block content %}
+<div class="stage stage--narrow stage--center">
+  <form class="card card--form" method="post" action="/admin">
+    <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+
+    <h1 class="admin-title">{{ t('admin.title') }}</h1>
+
+    {% if error %}
+    <p class="form-error" role="alert">{{ error }}</p>
+    {% endif %}
+
+    <div class="field">
+      <label class="field__label" for="password">{{ t('admin.password_label') }}</label>
+      <input class="field__input" id="password" name="password" type="password"
+             autocomplete="current-password" required>
+    </div>
+
+    <button class="btn btn--primary btn--block" type="submit">
+      {{ t('admin.login_submit') }}
+    </button>
+  </form>
+
+  <div class="admin-entry">
+    <a class="admin-entry__link" href="/">{{ t('admin.back_to_login') }}</a>
+  </div>
+</div>
+{% endblock %}

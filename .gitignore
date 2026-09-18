@@ -1,0 +1,21 @@
+# 비밀 정보 — 절대 커밋하지 마세요
+.env
+.env.*
+!.env.example
+
+# 데이터베이스 (개인정보 포함)
+instance/
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+
+# 의존성
+node_modules/
+npm-debug.log*
+
+# OS / 편집기
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp

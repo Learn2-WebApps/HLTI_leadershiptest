@@ -1,0 +1,75 @@
+{
+  "types": [
+    {
+      "key": "connector",
+      "name": "커넥터",
+      "axis": "유연 · 내부",
+      "description": "사람과 사람을 이어 믿고 함께 움직이는 팀을 만드는 리더예요. 파트원이 편하게 말하고, 서로 돕고, 함께 성장하는 분위기를 만듭니다.",
+      "overuse_name": "무한 포용형 커넥터",
+      "overuse_description": "모두를 만족시키려다 필요한 결정이 늦어지고, 지켜야 할 기준이 흐려질 수 있어요. 나도 모르게 에너지가 먼저 바닥날 수 있습니다.",
+      "competencies": [
+        "teamwork",
+        "trust_building",
+        "development",
+        "conflict_management"
+      ]
+    },
+    {
+      "key": "creator",
+      "name": "크리에이터",
+      "axis": "유연 · 외부",
+      "description": "익숙한 방식에 머물지 않고 더 나은 방향을 만들어 가는 리더예요. 새로운 방식을 시도하고, 파트가 나아갈 방향과 일하는 문화를 만듭니다.",
+      "overuse_name": "공상가형 크리에이터",
+      "overuse_description": "현장 여건보다 앞서 나가 큰 그림에만 몰두하거나, 시작한 변화가 자리 잡기 전에 또 다른 변화를 꺼낼 수 있어요.",
+      "competencies": [
+        "change_management",
+        "vision_sharing",
+        "culture_management"
+      ]
+    },
+    {
+      "key": "master",
+      "name": "마스터",
+      "axis": "안정 · 내부",
+      "description": "기준과 품질을 지켜 현장을 흔들림 없이 운영하는 리더예요. 정확하게 확인하고, 문제를 빠르게 잡고, 필요한 정보를 제때 나눕니다.",
+      "overuse_name": "깐깐한 감사관형 마스터",
+      "overuse_description": "작은 차이까지 확인하느라 속도가 늦어지고, 파트원의 자율성과 새로운 시도가 줄어들 수 있어요.",
+      "competencies": [
+        "quality_focus",
+        "problem_solving",
+        "information",
+        "timely_feedback"
+      ]
+    },
+    {
+      "key": "driver",
+      "name": "드라이버",
+      "axis": "안정 · 외부",
+      "description": "앞장서서 방향을 잡고 목표까지 힘 있게 끌고 가는 리더예요. 먼저 움직이고, 분명하게 알려주고, 필요한 결정을 제때 내립니다.",
+      "overuse_name": "급발진형 드라이버",
+      "overuse_description": "속도에 몰입해 파트원의 상황과 의견을 지나치고, 팀이 따라올 시간을 놓칠 수 있어요.",
+      "competencies": [
+        "leading_by_example",
+        "clear_direction",
+        "authority"
+      ]
+    }
+  ],
+  "competency_labels": {
+    "teamwork": "팀워크",
+    "trust_building": "신뢰관계 형성",
+    "development": "교육 및 성장지원",
+    "conflict_management": "갈등관리",
+    "change_management": "변화 관리",
+    "vision_sharing": "비전 공유",
+    "culture_management": "조직문화 관리",
+    "quality_focus": "품질 지향",
+    "problem_solving": "문제해결",
+    "information": "정보 수집 및 공유",
+    "timely_feedback": "적시 피드백",
+    "leading_by_example": "솔선수범",
+    "clear_direction": "명확한 지시",
+    "authority": "권한 행사"
+  },
+  "result_disclaimer": "본 결과는 리더십의 우열이나 고정된 성격을 판단하지 않으며, 현장 상황에서 상대적으로 자연스럽게 사용하는 리더십 방식을 보여줍니다."
+}
