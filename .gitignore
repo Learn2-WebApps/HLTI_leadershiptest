@@ -12,6 +12,7 @@ instance/
 
 # 버셀
 .vercel/
+vercel-env.txt
 
 # 의존성
 node_modules/
@@ -26,3 +27,7 @@ Thumbs.db
 
 # 편집기/도구 설정
 .claude/
+
+# 깃에 파이어베이스 키 값 올라가지 않게 하기
+hlti-leadershiptest-firebase-adminsdk-fbsvc-bd8b4d942f.json
+.env
