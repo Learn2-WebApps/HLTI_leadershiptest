@@ -447,31 +447,31 @@ test('보안 유틸리티', async (t) => {
     assert.ok(!security.hashPassword('test-pw-1234').includes('test-pw-1234'));
   });
 
-  await t.test('시도 제한 — 초과하면 차단', () => {
+  await t.test('시도 제한 — 초과하면 차단', async () => {
     const limiter = new security.RateLimiter(3, 60);
     for (let i = 0; i < 3; i += 1) {
-      assert.equal(limiter.check('1.2.3.4')[0], true);
-      limiter.registerFailure('1.2.3.4');
+      assert.equal((await limiter.check('1.2.3.4'))[0], true);
+      await limiter.registerFailure('1.2.3.4');
     }
-    const [allowed, retryAfter] = limiter.check('1.2.3.4');
+    const [allowed, retryAfter] = await limiter.check('1.2.3.4');
     assert.equal(allowed, false);
     assert.ok(retryAfter > 0);
   });
 
-  await t.test('시도 제한 — 키마다 따로', () => {
+  await t.test('시도 제한 — 키마다 따로', async () => {
     const limiter = new security.RateLimiter(2, 60);
-    limiter.registerFailure('1.1.1.1');
-    limiter.registerFailure('1.1.1.1');
-    assert.equal(limiter.check('1.1.1.1')[0], false);
-    assert.equal(limiter.check('2.2.2.2')[0], true);
+    await limiter.registerFailure('1.1.1.1');
+    await limiter.registerFailure('1.1.1.1');
+    assert.equal((await limiter.check('1.1.1.1'))[0], false);
+    assert.equal((await limiter.check('2.2.2.2'))[0], true);
   });
 
-  await t.test('시도 제한 — reset', () => {
+  await t.test('시도 제한 — reset', async () => {
     const limiter = new security.RateLimiter(1, 60);
-    limiter.registerFailure('k');
-    assert.equal(limiter.check('k')[0], false);
-    limiter.reset('k');
-    assert.equal(limiter.check('k')[0], true);
+    await limiter.registerFailure('k');
+    assert.equal((await limiter.check('k'))[0], false);
+    await limiter.reset('k');
+    assert.equal((await limiter.check('k'))[0], true);
   });
 
   await t.test('CSRF — 토큰 불일치 거부', () => {
@@ -482,6 +482,16 @@ test('보안 유틸리티', async (t) => {
     assert.equal(security.validateCsrf(req, ''), false);
     assert.equal(security.validateCsrf(req, null), false);
     assert.equal(security.validateCsrf({ session: {} }, 'abc123'), false);
+  });
+
+  await t.test('CSRF — 토큰 재발급 시 이전 토큰 무효', () => {
+    const req = { session: {} };
+    const first = security.getCsrfToken(req);
+    assert.equal(security.validateCsrf(req, first), true);
+    const second = security.rotateCsrfToken(req);
+    assert.notEqual(first, second);
+    assert.equal(security.validateCsrf(req, first), false);
+    assert.equal(security.validateCsrf(req, second), true);
   });
 
   await t.test('세션 이름 검증', () => {

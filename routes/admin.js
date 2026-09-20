@@ -16,6 +16,7 @@ const db = require('../lib/db');
 const security = require('../lib/security');
 const makeRenderer = require('../lib/render');
 const { HttpError } = require('../lib/errors');
+const { wrap } = require('../lib/async-route');
 
 /** CSV 한 칸을 안전하게 감쌉니다. */
 function csvCell(value) {
@@ -70,35 +71,39 @@ module.exports = function adminRoutes(content, config, limiters, adminPasswordHa
     return next();
   }
 
-  function requireSession(sessionId) {
-    const row = db.getSessionById(sessionId);
+  async function requireSession(sessionId) {
+    const row = await db.getSessionById(sessionId);
     if (row === null) throw new HttpError(404, '세션을 찾을 수 없습니다.');
     return row;
   }
 
+  /**
+   * Firestore 문서 id 검증.
+   * 경로에 이상한 값(슬래시, 상위 경로 등)이 오면 여기서 막습니다.
+   */
   function parseId(raw) {
-    const id = Number.parseInt(raw, 10);
-    if (!Number.isInteger(id) || id < 1) {
+    const value = String(raw || '');
+    if (!/^[A-Za-z0-9_-]{1,64}$/.test(value)) {
       throw new HttpError(404, '잘못된 식별자입니다.');
     }
-    return id;
+    return value;
   }
 
   // --- 로그인 ------------------------------------------------------------
 
-  router.get('/', (req, res) => {
+  router.get('/', wrap(async (req, res) => {
     if (req.session.adminAuthenticatedAt) return res.redirect('/admin/dashboard');
     const error = req.query.expired
       ? content.text('errors.session_expired_body')
       : null;
     return res.render('admin_login.html', { error });
-  });
+  }));
 
-  router.post('/', (req, res) => {
+  router.post('/', wrap(async (req, res) => {
     const limiter = limiters.admin;
     const key = security.clientKey(req);
 
-    const [allowed, retryAfter] = limiter.check(key);
+    const [allowed, retryAfter] = await limiter.check(key);
     if (!allowed) {
       return res.status(429).render('admin_login.html', {
         error: content.text('admin.login_locked').replace('{seconds}', String(retryAfter)),
@@ -107,81 +112,76 @@ module.exports = function adminRoutes(content, config, limiters, adminPasswordHa
 
     const password = typeof req.body.password === 'string' ? req.body.password : '';
     if (adminPasswordHash && security.verifyPassword(password, adminPasswordHash)) {
-      limiter.reset(key);
-      // 세션 고정 공격을 막기 위해 로그인 시 세션 id 를 새로 발급합니다.
-      return req.session.regenerate((err) => {
-        if (err) {
-          return res.status(500).render('admin_login.html', {
-            error: content.text('errors.server_error_body'),
-          });
-        }
-        req.session.adminAuthenticatedAt = Date.now();
-        return res.redirect('/admin/dashboard');
-      });
+      await limiter.reset(key);
+      // 로그인 성공 시 CSRF 토큰을 새로 발급합니다.
+      // (쿠키 세션에는 세션 id 가 없어 regenerate 가 필요 없습니다.)
+      security.rotateCsrfToken(req);
+      req.session.adminAuthenticatedAt = Date.now();
+      return res.redirect('/admin/dashboard');
     }
 
-    limiter.registerFailure(key);
+    await limiter.registerFailure(key);
     return res.status(401).render('admin_login.html', {
       error: content.text('admin.login_failed'),
     });
-  });
+  }));
 
-  router.post('/logout', requireAdmin, (req, res) => {
+  router.post('/logout', requireAdmin, wrap(async (req, res) => {
     delete req.session.adminAuthenticatedAt;
     res.redirect('/admin');
-  });
+  }));
 
   // --- 대시보드 ----------------------------------------------------------
 
-  router.get('/dashboard', requireAdmin, (req, res) => {
+  router.get('/dashboard', requireAdmin, wrap(async (req, res) => {
     res.render('admin_dashboard.html', {
-      sessions: db.listSessions(),
+      sessions: await db.listSessions(),
       error: null,
     });
-  });
+  }));
 
-  router.post('/sessions', requireAdmin, (req, res) => {
+  router.post('/sessions', requireAdmin, wrap(async (req, res) => {
     const name = security.cleanSessionName(req.body.name);
     if (name === null) {
       return res.status(400).render('admin_dashboard.html', {
-        sessions: db.listSessions(),
+        sessions: await db.listSessions(),
         error: '세션 이름을 1~60자로 입력해 주세요.',
       });
     }
-    db.createSession(name);
+    await db.createSession(name);
     return res.redirect('/admin/dashboard');
-  });
+  }));
 
-  router.post('/sessions/:id/toggle', requireAdmin, (req, res) => {
-    const row = requireSession(parseId(req.params.id));
-    db.setSessionActive(row.id, !row.is_active);
+  router.post('/sessions/:id/toggle', requireAdmin, wrap(async (req, res) => {
+    const row = await requireSession(parseId(req.params.id));
+    await db.setSessionActive(row.id, !row.is_active);
     res.redirect(safeNext(req.body.next, '/admin/dashboard'));
-  });
+  }));
 
-  router.post('/sessions/:id/retake', requireAdmin, (req, res) => {
-    const row = requireSession(parseId(req.params.id));
-    db.setSessionRetake(row.id, !row.allow_retake);
+  router.post('/sessions/:id/retake', requireAdmin, wrap(async (req, res) => {
+    const row = await requireSession(parseId(req.params.id));
+    await db.setSessionRetake(row.id, !row.allow_retake);
     res.redirect(safeNext(req.body.next, '/admin/dashboard'));
-  });
+  }));
 
   // 되돌릴 수 없는 삭제. 종료한 세션만 지울 수 있게 서버에서도 막습니다.
-  router.post('/sessions/:id/delete', requireAdmin, (req, res) => {
-    const row = requireSession(parseId(req.params.id));
+  router.post('/sessions/:id/delete', requireAdmin, wrap(async (req, res) => {
+    const row = await requireSession(parseId(req.params.id));
 
     if (row.is_active) {
       return res.status(400).render('admin_dashboard.html', {
-        sessions: db.listSessions(),
+        sessions: await db.listSessions(),
         error: content.text('admin.delete_blocked'),
       });
     }
 
-    const result = db.deleteSession(row.id);
+    const result = await db.deleteSession(row.id);
     console.info(
       `[HLTI] 세션 삭제: ${row.code} ${row.name} ` +
       `(응답 ${result.participants}건 함께 삭제)`
     );
     return res.redirect('/admin/dashboard');
-  });
+  }));
 
   /** 열린 리다이렉트를 막기 위해 앱 내부 경로만 허용합니다. */
   function safeNext(value, fallback) {
@@ -192,27 +192,27 @@ module.exports = function adminRoutes(content, config, limiters, adminPasswordHa
 
   // --- 세션 상세 ---------------------------------------------------------
 
-  router.get('/sessions/:id', requireAdmin, (req, res) => {
-    const row = requireSession(parseId(req.params.id));
+  router.get('/sessions/:id', requireAdmin, wrap(async (req, res) => {
+    const row = await requireSession(parseId(req.params.id));
     const characterTypes = Object.fromEntries(
       content.characters.map((c) => [c.key, c.type])
     );
-    const stats = db.sessionStatistics(row.id, content.typeKeys, characterTypes);
+    const stats = await db.sessionStatistics(row.id, content.typeKeys, characterTypes);
 
     res.render('admin_session.html', {
       session_row: row,
-      participants: db.listParticipants(row.id),
+      participants: await db.listParticipants(row.id),
       stats,
       characters_by_key: content.charactersByKey,
       characters: content.characters,
       types: content.types,
     });
-  });
+  }));
 
   // --- CSV ---------------------------------------------------------------
 
-  router.get('/sessions/:id/export.csv', requireAdmin, (req, res) => {
-    const row = requireSession(parseId(req.params.id));
+  router.get('/sessions/:id/export.csv', requireAdmin, wrap(async (req, res) => {
+    const row = await requireSession(parseId(req.params.id));
 
     const typeKeys = content.typeKeys;
     const competencyKeys = Object.keys(content.competencyLabels);
@@ -225,7 +225,7 @@ module.exports = function adminRoutes(content, config, limiters, adminPasswordHa
       '동점 여부', '완료 시각',
     ]));
 
-    for (const p of db.listParticipants(row.id)) {
+    for (const p of await db.listParticipants(row.id)) {
       const character = content.charactersByKey[p.result_character];
       const predicted = p.predicted_character
         ? content.charactersByKey[p.predicted_character]
@@ -256,12 +256,12 @@ module.exports = function adminRoutes(content, config, limiters, adminPasswordHa
       `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`
     );
     res.send(body);
-  });
+  }));
 
   // --- 개별 결과 다시 보기 ------------------------------------------------
 
-  router.get('/participants/:id', requireAdmin, (req, res) => {
-    const p = db.getParticipant(parseId(req.params.id));
+  router.get('/participants/:id', requireAdmin, wrap(async (req, res) => {
+    const p = await db.getParticipant(parseId(req.params.id));
     if (p === null) throw new HttpError(404, '응답자를 찾을 수 없습니다.');
 
     const character = content.charactersByKey[p.result_character];
@@ -275,7 +275,7 @@ module.exports = function adminRoutes(content, config, limiters, adminPasswordHa
       companions: [],
       name: p.name,
     });
-  });
+  }));
 
   return router;
 };

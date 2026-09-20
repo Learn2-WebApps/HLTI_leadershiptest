@@ -3,7 +3,7 @@
 > 나를 움직이는 리더십 코드
 
 제조 현장 파트장(1선 관리자) 대상 리더십 유형 진단 웹앱입니다.
-Node.js + Express + SQLite 로 만들어져 있어 **별도 서버나 DB 설치가 필요 없습니다.**
+Node.js + Express + Firestore. 버셀(서버리스) 배포를 전제로 합니다.
 
 ---
 
@@ -21,6 +21,26 @@ npm install
 copy .env.example .env
 ```
 
+**Firebase 서비스 계정 키가 없으면 실행되지 않습니다.** 이 앱은 응답을
+Firestore 에만 저장합니다.
+
+### .env 에 채울 값
+
+| 이름 | 설명 |
+|---|---|
+| `FIREBASE_SERVICE_ACCOUNT` | 서비스 계정 JSON **전체**를 한 줄로 붙여넣기 |
+| `HLTI_SECRET_KEY` | 세션 쿠키 서명 키 |
+| `HLTI_ADMIN_PASSWORD` | 관리자 비밀번호 (직접 정하세요) |
+
+서비스 계정 키는 Firebase 콘솔 →
+**프로젝트 설정 → 서비스 계정 → 새 비공개 키 생성** 에서 받습니다.
+
+`HLTI_SECRET_KEY` 는 이렇게 만듭니다.
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
 그다음 실행합니다.
 
 ```bash
@@ -30,24 +50,29 @@ npm run dev
 - 진단 화면: http://localhost:3000
 - 관리자 화면: http://localhost:3000/admin
 
-`npm run dev` 는 파일이 바뀌면 서버가 자동으로 다시 뜹니다(`node --watch`).
-운영에서는 `npm start` 를 쓰세요.
+`npm run dev` 는 파일이 바뀌면 서버가 자동으로 다시 뜹니다.
 
-### .env 에 꼭 채워야 하는 값
+---
 
-```
-HLTI_SECRET_KEY=...        # 아래 명령으로 생성
-HLTI_ADMIN_PASSWORD=...    # 관리자 비밀번호 (직접 정하세요)
-```
+## 1-1. 버셀 배포
 
-`HLTI_SECRET_KEY` 는 이렇게 만듭니다.
+깃허브에 푸시하면 버셀이 자동으로 배포합니다. 처음 한 번만 설정하면 됩니다.
 
-```bash
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-```
+1. 버셀에서 이 저장소를 Import
+2. **Settings → Environment Variables** 에 아래 3개를 넣습니다
 
-지정하지 않으면 서버를 켤 때마다 임시 키가 생성되어, 재시작하면 진행 중인
-응답이 모두 끊깁니다.
+   ```
+   FIREBASE_SERVICE_ACCOUNT   서비스 계정 JSON 전체
+   HLTI_SECRET_KEY            랜덤 64자
+   HLTI_ADMIN_PASSWORD        관리자 비밀번호
+   HLTI_SECURE_COOKIE         1
+   HLTI_TRUST_PROXY           1
+   ```
+
+3. 배포 후 `/` 와 `/admin` 접속 확인
+
+`vercel.json` 이 모든 요청을 `api/index.js` 로 보내고, 그 파일이
+`server.js` 의 앱을 서버리스 함수로 감쌉니다.
 
 ---
 
@@ -119,10 +144,13 @@ leadership-test/
 │   ├── config.js             설정(환경변수 읽기)
 │   ├── content.js            JSON 로딩·검증·메모리 캐싱
 │   ├── scoring.js            채점 로직 (Express 비의존 · 테스트 대상)
-│   ├── db.js                 SQLite 저장 계층
+│   ├── db.js                 Firestore 저장 계층
 │   ├── security.js           CSRF · 입력 검증 · 시도 제한 · 비밀번호 해시
 │   ├── render.js             결과 화면 렌더링(참여자·관리자 공용)
-│   └── errors.js             InvalidFlow / HttpError
+│   ├── errors.js             InvalidFlow / HttpError
+│   └── async-route.js        async 핸들러 오류 전달
+├── api/index.js              버셀(서버리스) 진입점
+├── vercel.json               버셀 라우팅 설정
 ├── routes/
 │   ├── participant.js        로그인 → 예측 → Part1 → Part2 → 결과
 │   └── admin.js              세션 관리 · 통계 · CSV · 결과 다시 보기
@@ -133,8 +161,6 @@ leadership-test/
 │   └── images/characters/    화면용 캐릭터 이미지 14장
 ├── data/                     문항·문구 JSON 5개
 ├── characters/               원본 캐릭터 이미지 (보존용)
-├── instance/
-│   └── hlti.sqlite3          응답 데이터베이스 (자동 생성)
 └── tests/scoring.test.js     단위 테스트
 ```
 
@@ -223,7 +249,7 @@ Part 2 의 URL 에는 유형이 드러나지 않습니다(`/q/p2/3`). 유형은 
 npm test
 ```
 
-`node --test` 로 59개 케이스가 돌아갑니다. 채점 규칙, 2·3·4중 동점,
+`node --test` 로 60개 케이스가 돌아갑니다. 채점 규칙, 2·3·4중 동점,
 동점 판별 문항 필터링, 위조 제출 방어, 입력 검증, 비밀번호 해시,
 시도 횟수 제한, CSRF, 그리고 실제 `data/` 파일 정합성(문항 수, 선택지 수,
 캐릭터 매칭, 이미지 존재 여부)까지 검증합니다.
@@ -237,12 +263,12 @@ npm test
 | CSRF | 모든 상태 변경 요청에 세션 기반 토큰. `timingSafeEqual` 로 상수 시간 비교 |
 | XSS | Nunjucks 자동 이스케이프 + 이름 입력 화이트리스트 검증 |
 | 인라인 JSON | `<script type="application/json">` 에 `<`, `>`, `&` 를 유니코드로 이스케이프 |
-| SQL 인젝션 | 모든 쿼리 파라미터 바인딩 |
+| 인젝션 | Firestore 쿼리는 값 바인딩만 사용 |
 | CSV 인젝션 | `=`, `+`, `@` 등으로 시작하는 문자열 앞에 `'` 삽입 (음수 점수는 제외) |
 | 세션 쿠키 | HttpOnly · SameSite=Lax · Secure(환경변수로 전환) |
-| 세션 고정 | 관리자 로그인 시 세션 id 재발급 |
+| 세션 | 서명된 쿠키에 보관(서버 상태 없음). 로그인 시 CSRF 토큰 재발급 |
 | 관리자 비밀번호 | 평문 저장 안 함. PBKDF2-SHA256 240,000회 + 솔트 |
-| 무차별 대입 | 세션 코드·관리자 비밀번호 모두 IP 단위 시도 제한 |
+| 무차별 대입 | IP 단위 시도 제한을 Firestore 에 기록(인스턴스 간 공유) |
 | 접근 통제 | 관리자 경로 전체 로그인 필수. 참여자는 본인 결과만 접근 |
 | 진행 순서 | 앞 문항 미응답 시 건너뛰기 차단. 동점 후보 아닌 값 제출 거부 |
 | 열린 리다이렉트 | `next` 파라미터는 앱 내부 경로만 허용 |
@@ -258,7 +284,7 @@ CSP 가 `script-src 'self'` 이므로 외부 CDN 을 쓰지 않습니다.
 - JSON 5개는 시작할 때 1회 읽어 캐싱합니다(요청마다 파일 I/O 없음).
 - 결과를 산출한 직후 응답 원본과 로그인 정보를 세션에서 제거합니다.
 - 시도 제한기는 만료 항목을 자동 정리하고 키 개수 상한을 둡니다.
-- SQLite 연결은 하나를 재사용합니다(연결 누수 없음). 종료 시그널에서 정리합니다.
+- Firestore 연결은 인스턴스가 살아 있는 동안 재사용합니다.
 
 ### 수집하는 개인정보
 
@@ -274,6 +300,5 @@ CSP 가 `script-src 'self'` 이므로 외부 CDN 을 쓰지 않습니다.
 - [ ] HTTPS 적용 후 `HLTI_SECURE_COOKIE=1`
 - [ ] 리버스 프록시 뒤라면 `HLTI_TRUST_PROXY=1`
 - [ ] `HLTI_DEBUG=0` 확인
-- [ ] `npm run dev` 가 아니라 `npm start` 로 실행
-- [ ] `instance/hlti.sqlite3` 정기 백업 (파일 복사만 하면 됩니다)
-- [ ] `.env` 와 `instance/` 는 배포·공유 대상에서 제외 (`.gitignore` 에 이미 포함)
+- [ ] Firestore 백업 설정 (콘솔에서 내보내기 예약)
+- [ ] `.env` 와 서비스 계정 키 파일은 커밋 금지 (`.gitignore` 에 이미 포함)

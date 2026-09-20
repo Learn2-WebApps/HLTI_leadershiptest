@@ -14,6 +14,7 @@ const db = require('../lib/db');
 const scoring = require('../lib/scoring');
 const security = require('../lib/security');
 const { InvalidFlow } = require('../lib/errors');
+const { wrap } = require('../lib/async-route');
 const makeRenderer = require('../lib/render');
 
 module.exports = function participantRoutes(content, config, limiters) {
@@ -160,11 +161,11 @@ module.exports = function participantRoutes(content, config, limiters) {
   //  로그인
   // ======================================================================
 
-  router.get('/', (req, res) => {
+  router.get('/', wrap(async (req, res) => {
     res.render('login.html', { error: null, form: {} });
-  });
+  }));
 
-  router.post('/', (req, res) => {
+  router.post('/', wrap(async (req, res) => {
     const limiter = limiters.login;
     const key = security.clientKey(req);
     const form = {
@@ -172,7 +173,7 @@ module.exports = function participantRoutes(content, config, limiters) {
       name: typeof req.body.name === 'string' ? req.body.name : '',
     };
 
-    const [allowed, retryAfter] = limiter.check(key);
+    const [allowed, retryAfter] = await limiter.check(key);
     if (!allowed) {
       return res.status(429).render('login.html', {
         error: content.text('login.error_too_many_attempts')
@@ -187,7 +188,7 @@ module.exports = function participantRoutes(content, config, limiters) {
     let error = null;
 
     if (code === null) {
-      limiter.registerFailure(key);
+      await limiter.registerFailure(key);
       error = content.text('login.error_code_format');
     } else if (name === null) {
       const rawName = String(req.body.name || '').trim();
@@ -195,16 +196,16 @@ module.exports = function participantRoutes(content, config, limiters) {
         rawName ? 'login.error_name_invalid' : 'login.error_name_required'
       );
     } else {
-      const row = db.getSessionByCode(code);
+      const row = await db.getSessionByCode(code);
       if (row === null) {
-        limiter.registerFailure(key);
+        await limiter.registerFailure(key);
         error = content.text('login.error_code_unknown');
       } else if (!row.is_active) {
         error = content.text('login.error_code_closed');
-      } else if (!row.allow_retake && db.participantNameTaken(row.id, name)) {
+      } else if (!row.allow_retake && await db.participantNameTaken(row.id, name)) {
         error = content.text('login.error_duplicate_name');
       } else {
-        limiter.reset(key);
+        await limiter.reset(key);
         clearProgress(req);
         delete req.session.result;
         req.session.participant = {
@@ -218,22 +219,22 @@ module.exports = function participantRoutes(content, config, limiters) {
     }
 
     return res.status(400).render('login.html', { error, form });
-  });
+  }));
 
   // ======================================================================
   //  캐릭터 예측
   // ======================================================================
 
-  router.get('/predict', (req, res) => {
+  router.get('/predict', wrap(async (req, res) => {
     const participant = participantOf(req);
     res.render('predict.html', {
       characters: content.characters,
       selected: participant.predicted,
       error: null,
     });
-  });
+  }));
 
-  router.post('/predict', (req, res) => {
+  router.post('/predict', wrap(async (req, res) => {
     const participant = participantOf(req);
 
     if (req.body.action === 'skip') {
@@ -260,13 +261,13 @@ module.exports = function participantRoutes(content, config, limiters) {
     delete req.session.p2Tie;
 
     return res.redirect('/q/p1/1');
-  });
+  }));
 
   // ======================================================================
   //  Part 1
   // ======================================================================
 
-  router.get('/q/p1/:index(\\d+)', (req, res) => {
+  router.get('/q/p1/:index(\\d+)', wrap(async (req, res) => {
     const participant = participantOf(req);
     const index = Number.parseInt(req.params.index, 10);
     const total = content.part1Count();
@@ -289,9 +290,9 @@ module.exports = function participantRoutes(content, config, limiters) {
       participant, question, index, total, part: 'p1',
       saved: answers[question.id] || {},
     });
-  });
+  }));
 
-  router.post('/q/p1/:index(\\d+)', (req, res) => {
+  router.post('/q/p1/:index(\\d+)', wrap(async (req, res) => {
     const participant = participantOf(req);
     const index = Number.parseInt(req.params.index, 10);
     const total = content.part1Count();
@@ -321,9 +322,9 @@ module.exports = function participantRoutes(content, config, limiters) {
     req.session.p1Answers = answers;
 
     return res.redirect(index < total ? `/q/p1/${index + 1}` : '/q/p1/done');
-  });
+  }));
 
-  router.get('/q/p1/done', (req, res) => {
+  router.get('/q/p1/done', wrap(async (req, res) => {
     participantOf(req);
     const answers = answersOf(req, 'p1Answers');
     if (Object.keys(answers).length < content.part1Count()) {
@@ -333,9 +334,9 @@ module.exports = function participantRoutes(content, config, limiters) {
     if (outcome.winner === null) return res.redirect('/tie/p1');
     req.session.typeKey = outcome.winner;
     return res.redirect('/interlude');
-  });
+  }));
 
-  router.get('/tie/p1', (req, res) => {
+  router.get('/tie/p1', wrap(async (req, res) => {
     const participant = participantOf(req);
     const answers = answersOf(req, 'p1Answers');
     if (Object.keys(answers).length < content.part1Count()) {
@@ -351,9 +352,9 @@ module.exports = function participantRoutes(content, config, limiters) {
     const question = content.part1Tiebreaker;
     const options = scoring.tiebreakerOptions(question, outcome.tied, 'type');
     return renderTiebreak(req, res, { participant, question, options, part: 'p1' });
-  });
+  }));
 
-  router.post('/tie/p1', (req, res) => {
+  router.post('/tie/p1', wrap(async (req, res) => {
     const participant = participantOf(req);
     const answers = answersOf(req, 'p1Answers');
     if (Object.keys(answers).length < content.part1Count()) {
@@ -381,20 +382,20 @@ module.exports = function participantRoutes(content, config, limiters) {
     req.session.p1Tie = picked.type;
     req.session.typeKey = picked.type;
     return res.redirect('/interlude');
-  });
+  }));
 
   // ======================================================================
   //  전환 안내
   // ======================================================================
 
-  router.get('/interlude', (req, res) => {
+  router.get('/interlude', wrap(async (req, res) => {
     participantOf(req);
     const typeKey = req.session.typeKey;
     if (!typeKey || !(typeKey in content.typesByKey)) {
       throw new InvalidFlow('유형이 아직 정해지지 않았습니다.');
     }
     res.render('interlude.html', { type_obj: content.typesByKey[typeKey] });
-  });
+  }));
 
   // ======================================================================
   //  Part 2
@@ -408,7 +409,7 @@ module.exports = function participantRoutes(content, config, limiters) {
     return typeKey;
   }
 
-  router.get('/q/p2/:index(\\d+)', (req, res) => {
+  router.get('/q/p2/:index(\\d+)', wrap(async (req, res) => {
     const participant = participantOf(req);
     const typeKey = requireType(req);
     const questions = content.part2Questions(typeKey);
@@ -432,9 +433,9 @@ module.exports = function participantRoutes(content, config, limiters) {
       participant, question, index, total, part: 'p2',
       saved: answers[question.id] || {},
     });
-  });
+  }));
 
-  router.post('/q/p2/:index(\\d+)', (req, res) => {
+  router.post('/q/p2/:index(\\d+)', wrap(async (req, res) => {
     const participant = participantOf(req);
     const typeKey = requireType(req);
     const questions = content.part2Questions(typeKey);
@@ -466,9 +467,9 @@ module.exports = function participantRoutes(content, config, limiters) {
     req.session.p2Answers = answers;
 
     return res.redirect(index < total ? `/q/p2/${index + 1}` : '/q/p2/done');
-  });
+  }));
 
-  router.get('/q/p2/done', (req, res) => {
+  router.get('/q/p2/done', wrap(async (req, res) => {
     participantOf(req);
     const typeKey = requireType(req);
     const answers = answersOf(req, 'p2Answers');
@@ -478,9 +479,9 @@ module.exports = function participantRoutes(content, config, limiters) {
     const outcome = resolvePart2(req, typeKey, answers);
     if (outcome.winner === null) return res.redirect('/tie/p2');
     return res.redirect('/result');
-  });
+  }));
 
-  router.get('/tie/p2', (req, res) => {
+  router.get('/tie/p2', wrap(async (req, res) => {
     const participant = participantOf(req);
     const typeKey = requireType(req);
     const answers = answersOf(req, 'p2Answers');
@@ -494,9 +495,9 @@ module.exports = function participantRoutes(content, config, limiters) {
     const question = content.part2Tiebreaker(typeKey);
     const options = scoring.tiebreakerOptions(question, outcome.tied, 'competency');
     return renderTiebreak(req, res, { participant, question, options, part: 'p2' });
-  });
+  }));
 
-  router.post('/tie/p2', (req, res) => {
+  router.post('/tie/p2', wrap(async (req, res) => {
     const participant = participantOf(req);
     const typeKey = requireType(req);
     const answers = answersOf(req, 'p2Answers');
@@ -521,13 +522,13 @@ module.exports = function participantRoutes(content, config, limiters) {
     const picked = options.find((o) => o.id === choice);
     req.session.p2Tie = picked.competency;
     return res.redirect('/result');
-  });
+  }));
 
   // ======================================================================
   //  결과
   // ======================================================================
 
-  router.get('/result', (req, res) => {
+  router.get('/result', wrap(async (req, res) => {
     // 이미 산출된 결과가 있으면 그대로 보여 줍니다(새로고침 대응).
     const cached = req.session.result;
     if (cached && typeof cached === 'object' && cached.character) {
@@ -575,7 +576,7 @@ module.exports = function participantRoutes(content, config, limiters) {
     const hadTie = p1Outcome.hadTie || p2Outcome.hadTie;
 
     try {
-      db.saveParticipant({
+      await db.saveParticipant({
         sessionId: participant.sessionId,
         name: participant.name,
         predictedCharacter: participant.predicted,
@@ -604,7 +605,7 @@ module.exports = function participantRoutes(content, config, limiters) {
     req.session.result = payload;
 
     return renderResult(res, payload);
-  });
+  }));
 
   return router;
 };

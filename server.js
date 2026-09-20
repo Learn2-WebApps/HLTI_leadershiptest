@@ -14,7 +14,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const express = require('express');
-const session = require('express-session');
+const cookieSession = require('cookie-session');
 const nunjucks = require('nunjucks');
 
 const config = require('./lib/config');
@@ -25,7 +25,7 @@ const { InvalidFlow } = require('./lib/errors');
 const participantRoutes = require('./routes/participant');
 const adminRoutes = require('./routes/admin');
 
-function createApp() {
+async function createApp() {
   // --- 콘텐츠 로딩 (기동 시 1회, 이후 메모리 캐싱) ------------------------
   let content;
   try {
@@ -66,7 +66,8 @@ function createApp() {
   }
 
   // --- DB ----------------------------------------------------------------
-  db.init(config.databasePath);
+  await db.init();
+  console.log('[HLTI] 저장소: Firestore');
 
   // --- 앱 ----------------------------------------------------------------
   const app = express();
@@ -181,19 +182,24 @@ function createApp() {
   app.use(express.urlencoded({ extended: false, limit: config.maxBodySize }));
 
   // --- 세션 ---------------------------------------------------------------
-  app.use(session({
+  // 세션 내용을 서명된 쿠키에 담습니다(서버에 상태를 두지 않음).
+  // 버셀처럼 요청마다 다른 인스턴스가 뜨는 환경에서도 로그인이 유지됩니다.
+  // 담기는 값은 응답 18개와 로그인 정보뿐이라 쿠키 4KB 한도에 충분히 들어갑니다.
+  app.use(cookieSession({
     name: config.sessionCookieName,
-    secret: config.secretKey,
-    resave: false,
-    saveUninitialized: true,   // CSRF 토큰을 첫 GET 에서 발급해야 합니다
-    rolling: true,             // 활동이 있으면 만료를 뒤로 미룹니다
-    cookie: {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: config.secureCookie,   // HTTPS 라면 HLTI_SECURE_COOKIE=1
-      maxAge: config.participantSessionMinutes * 60 * 1000,
-    },
+    keys: [config.secretKey],
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: config.secureCookie,   // HTTPS 라면 HLTI_SECURE_COOKIE=1
+    maxAge: config.participantSessionMinutes * 60 * 1000,
   }));
+
+  // cookie-session 은 값을 지울 때 delete 가 통하지 않는 경우가 있어
+  // 세션 객체가 항상 존재하도록 보장합니다.
+  app.use((req, res, next) => {
+    if (!req.session) req.session = {};
+    next();
+  });
 
   // --- 보안 헤더 -----------------------------------------------------------
   app.use((req, res, next) => {
@@ -223,9 +229,12 @@ function createApp() {
   });
 
   // --- 시도 횟수 제한기 (앱 1개당 1개) ---------------------------------------
+  // 인스턴스가 여러 개여도 같은 횟수를 보도록 Firestore 에 기록합니다.
   const limiters = {
-    login: new security.RateLimiter(config.loginMaxAttempts, config.loginWindowSeconds),
-    admin: new security.RateLimiter(config.adminMaxAttempts, config.adminWindowSeconds),
+    login: new security.SharedRateLimiter(
+      db, config.loginMaxAttempts, config.loginWindowSeconds),
+    admin: new security.SharedRateLimiter(
+      db, config.adminMaxAttempts, config.adminWindowSeconds),
   };
 
   // --- 라우트 --------------------------------------------------------------
@@ -289,7 +298,7 @@ function createApp() {
 // --- 실행 -----------------------------------------------------------------
 
 if (require.main === module) {
-  const app = createApp();
+  createApp().then((app) => {
   const server = app.listen(config.port, config.host, () => {
     console.log('');
     console.log('  ==========================================');
@@ -303,8 +312,8 @@ if (require.main === module) {
 
   function shutdown(signal) {
     console.log(`\n[HLTI] ${signal} 수신. 서버를 정리합니다.`);
-    server.close(() => {
-      db.close();
+    server.close(async () => {
+      await db.close();
       process.exit(0);
     });
     // 연결이 남아 있어도 일정 시간 뒤에는 종료합니다.
@@ -313,6 +322,10 @@ if (require.main === module) {
 
   process.on('SIGINT', () => shutdown('SIGINT'));
   process.on('SIGTERM', () => shutdown('SIGTERM'));
+  }).catch((err) => {
+    console.error('\n[HLTI] 앱을 시작하지 못했습니다.\n  ' + err.message + '\n');
+    process.exit(1);
+  });
 }
 
 module.exports = { createApp };
