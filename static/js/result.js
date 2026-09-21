@@ -24,18 +24,72 @@
     return String(value).replace(/[\\/:*?"<>|]+/g, "_").slice(0, 80) || "HLTI";
   }
 
+    // iOS Safari는 <a download>를 지원하지 않아 저장이 실패합니다.
+  var isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
   function download(blobOrUrl, filename) {
+    var url = typeof blobOrUrl === "string"
+      ? blobOrUrl
+      : URL.createObjectURL(blobOrUrl);
+
+    if (isIOS) {
+      showImageOverlay(url, typeof blobOrUrl !== "string");
+      return;
+    }
+
     var link = document.createElement("a");
-    var url = typeof blobOrUrl === "string" ? blobOrUrl : URL.createObjectURL(blobOrUrl);
     link.href = url;
     link.download = filename;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     if (typeof blobOrUrl !== "string") {
-      // 메모리 해제
       setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
     }
+  }
+
+  // 이미지를 화면에 띄우고 길게 눌러 사진 앱에 저장하게 합니다.
+  function showImageOverlay(url, isObjectUrl) {
+    var bg = document.createElement("div");
+    bg.style.cssText =
+      "position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.92);" +
+      "overflow:auto;padding:16px;text-align:center;";
+
+    var tip = document.createElement("p");
+    tip.textContent = "이미지를 길게 눌러 \u201C사진에 저장\u201D을 선택하세요";
+    tip.style.cssText =
+      "color:#fff;font-size:15px;line-height:1.5;margin:4px 0 12px;";
+
+    var img = document.createElement("img");
+    img.src = url;
+    img.style.cssText = "max-width:100%;height:auto;border-radius:8px;";
+
+    var close = document.createElement("button");
+    close.type = "button";
+    close.textContent = "닫기";
+    close.style.cssText =
+      "display:block;margin:16px auto 24px;padding:10px 28px;font-size:15px;" +
+      "border:0;border-radius:6px;background:#fff;color:#222;";
+    close.addEventListener("click", function () {
+      bg.remove();
+      if (isObjectUrl) { URL.revokeObjectURL(url); }
+    });
+
+    bg.appendChild(tip);
+    bg.appendChild(img);
+    bg.appendChild(close);
+    document.body.appendChild(bg);
+  }
+
+  // iOS Safari의 캔버스 최대 면적은 4096x4096px입니다.
+  // 결과지가 세로로 길면 이 한계에 걸려 빈 이미지가 됩니다.
+  function capScale(el) {
+    var base = Math.min(window.devicePixelRatio || 1, 2);
+    var w = el.scrollWidth || el.offsetWidth || 1;
+    var h = el.scrollHeight || el.offsetHeight || 1;
+    var MAX = 4096;
+    return Math.max(1, Math.min(base, MAX / w, MAX / h));
   }
 
   if (saveBtn) {
@@ -51,10 +105,15 @@
 
       // 캡처 중에는 떠 있는 애니메이션을 멈춰 흔들림을 막습니다.
       sheet.classList.add("is-capturing");
-
+      // 저장 이미지에서 제외할 영역을 잠시 숨깁니다.
+      var hidden = Array.prototype.slice.call(
+        sheet.querySelectorAll(".no-capture")
+      );
+      hidden.forEach(function (el) { el.style.display = "none"; });
+     
       window.html2canvas(sheet, {
         backgroundColor: "#FFFBF6",
-        scale: Math.min(window.devicePixelRatio || 1, 2),
+        scale: capScale(sheet),
         useCORS: true,
         logging: false,
         scrollX: 0,
@@ -72,9 +131,13 @@
         } else {
           download(canvas.toDataURL("image/png"), filename);
         }
-      }).catch(function () {
-        window.alert(config.failed);
+      }).catch(function (err) {
+        window.alert(
+        config.failed + "\n\n[" +
+        ((err && (err.message || err.name)) || String(err)) + "]"
+       );
       }).then(function () {
+        hidden.forEach(function (el) { el.style.display = ""; });
         sheet.classList.remove("is-capturing");
         saveBtn.disabled = false;
         saveBtn.textContent = original || config.saveLabel;
