@@ -82,57 +82,173 @@
     document.body.appendChild(bg);
   }
 
-  /**
-   * 저장 이미지에서 글자가 아래로 치우치는 것을 바로잡습니다.
-   *
-   * html2canvas 는 상하 패딩과 line-height 가 함께 있는 한 줄짜리 요소에서
-   * 글자를 line-box 아래쪽에 그립니다(화면에서는 정상). 패딩으로 세로
-   * 가운데를 맞춘 알약 배지·칩이 여기에 해당합니다.
-   *
-   * 그래서 복제본에서만 세로 패딩을 line-height 안으로 옮깁니다.
-   *   원래:  border + padTop + lineHeight + padBottom + border
-   *   보정:  border + 0      + (lineHeight+padTop+padBottom) + 0 + border
-   * 두 값의 합이 같으므로 상자 높이는 그대로이고, 글자만 가운데로 옵니다.
-   *
-   * 건드리는 속성은 padding-top, padding-bottom, line-height 세 개뿐입니다.
-   * 좌우 패딩·배경·테두리·높이는 손대지 않습니다.
-   *
-   * 치수는 반드시 화면에 있는 원본에서 잽니다. 복제본은 브라우저에 따라
-   * onclone 시점에 아직 배치가 끝나지 않아 높이가 0 으로 나올 수 있고,
-   * 그 값을 그대로 쓰면 요소가 찌그러집니다(iOS 에서 실제로 그랬습니다).
-   */
-  function fixCapturedCentering(clonedRoot) {
-    var SELECTOR = ".hero__label, .result-brand__mark, .chip, .code-chip";
+  /* 저장 이미지에서 글자가 세로 가운데에서 벗어나는 문제 보정.
+
+     html2canvas 는 글자의 세로 위치를 스스로 잰 폰트 지표로 정하기 때문에
+     화면과 몇 px 어긋나게 그립니다. 어긋나는 양은 요소·폰트·기기마다 달라서
+     코드에 숫자로 박아 둘 수 없습니다.
+
+     그래서 저장하기 직전에 화면 밖에서 작은 견본을 한 번 그려 보고,
+     글자가 실제로 몇 px 밀렸는지 재서 본 캡처에서 그만큼 되돌립니다.
+     상자 크기·배경·테두리·좌우 여백은 건드리지 않고, 글자만 움직입니다. */
+
+  // 패딩으로 세로 가운데를 맞춘 한 줄짜리 요소들입니다.
+  var CENTER_SELECTOR = ".hero__label, .result-brand__mark, .chip, .code-chip";
+
+  // 보정 대상 고르기: 글자만 들어 있고, 한 줄이며, 세로 패딩이 있는 요소.
+  function centerTargets() {
+    var all = sheet.querySelectorAll(CENTER_SELECTOR);
+    var picked = [];
+
+    for (var i = 0; i < all.length; i += 1) {
+      var el = all[i];
+      if (el.children.length > 0) { continue; }
+      if (!el.textContent.trim()) { continue; }
+
+      var cs = window.getComputedStyle(el);
+      var lineHeight = parseFloat(cs.lineHeight);
+      if (!isFinite(lineHeight) || lineHeight <= 0) { continue; }
+
+      var padTop = parseFloat(cs.paddingTop) || 0;
+      var padBottom = parseFloat(cs.paddingBottom) || 0;
+      if (padTop === 0 && padBottom === 0) { continue; }
+
+      var borderTop = parseFloat(cs.borderTopWidth) || 0;
+      var borderBottom = parseFloat(cs.borderBottomWidth) || 0;
+      var height = el.getBoundingClientRect().height;
+      if (!(height > 0)) { continue; }
+      // 두 줄 이상이면 가운데 정렬 대상이 아닙니다.
+      if (height > lineHeight + padTop + padBottom + borderTop + borderBottom + 1) {
+        continue;
+      }
+
+      picked.push({ index: i, el: el });
+    }
+
+    return picked;
+  }
+
+  function copyComputedStyle(from, to) {
+    var cs = window.getComputedStyle(from);
+    for (var i = 0; i < cs.length; i += 1) {
+      var name = cs[i];
+      to.style.setProperty(name, cs.getPropertyValue(name));
+    }
+  }
+
+  /** 화면 밖 견본을 캡처해 요소마다 글자가 밀린 양(px)을 잽니다. */
+  function measureTextShifts(targets) {
+    var zeros = targets.map(function () { return 0; });
+    if (!targets.length) { return Promise.resolve(zeros); }
+
+    var probe = document.createElement("div");
+    probe.setAttribute("aria-hidden", "true");
+    probe.style.cssText =
+      "position:fixed;left:-10000px;top:0;z-index:-1;margin:0;padding:0;" +
+      "background:#ffffff;";
+
+    var clones = targets.map(function (t) {
+      var row = document.createElement("div");
+      row.style.cssText =
+        "margin:0;padding:0;background:#ffffff;font-size:0;line-height:0;";
+      var clone = t.el.cloneNode(true);
+      copyComputedStyle(t.el, clone);
+      // 글자만 검게 남기고 나머지는 흰색으로 지웁니다.
+      clone.style.setProperty("margin", "0");
+      clone.style.setProperty("position", "static");
+      clone.style.setProperty("transform", "none");
+      clone.style.setProperty("animation", "none");
+      clone.style.setProperty("box-shadow", "none");
+      clone.style.setProperty("color", "#000000");
+      clone.style.setProperty("background", "#ffffff");
+      clone.style.setProperty("border-color", "#ffffff");
+      row.appendChild(clone);
+      probe.appendChild(row);
+      return clone;
+    });
+
+    document.body.appendChild(probe);
+    var probeRect = probe.getBoundingClientRect();
+    var boxes = clones.map(function (clone) {
+      var r = clone.getBoundingClientRect();
+      return {
+        x: r.left - probeRect.left,
+        y: r.top - probeRect.top,
+        w: r.width,
+        h: r.height
+      };
+    });
+
+    function cleanup() {
+      if (probe.parentNode) { probe.parentNode.removeChild(probe); }
+    }
+
+    return window.html2canvas(probe, {
+      backgroundColor: "#ffffff",
+      scale: 1,
+      useCORS: true,
+      logging: false
+    }).then(function (canvas) {
+      var ctx = canvas.getContext("2d");
+      var shifts = boxes.map(function (b) {
+        var x0 = Math.max(0, Math.round(b.x));
+        var y0 = Math.max(0, Math.round(b.y));
+        var w = Math.min(Math.round(b.w), canvas.width - x0);
+        var h = Math.min(Math.round(b.h), canvas.height - y0);
+        if (w <= 0 || h <= 0) { return 0; }
+
+        var data;
+        try { data = ctx.getImageData(x0, y0, w, h).data; } catch (err) { return 0; }
+
+        var top = null;
+        var bottom = null;
+        for (var y = 0; y < h; y += 1) {
+          var dark = 0;
+          for (var x = 0; x < w; x += 1) {
+            var i = (y * w + x) * 4;
+            if (data[i] < 140 && data[i + 3] > 40) { dark += 1; }
+          }
+          if (dark >= 2) {
+            if (top === null) { top = y; }
+            bottom = y;
+          }
+        }
+        if (top === null) { return 0; }
+
+        // 글자 덩어리의 한가운데와 상자 한가운데의 차이가 밀린 양입니다.
+        var shift = (top + bottom + 1) / 2 - h / 2;
+        // 값이 터무니없으면 측정이 잘못된 것이므로 보정하지 않습니다.
+        return Math.abs(shift) > 14 ? 0 : shift;
+      });
+      cleanup();
+      return shifts;
+    }).catch(function () {
+      cleanup();
+      return zeros;
+    });
+  }
+
+  /** 복제본에서 글자만 끌어올립니다. 상자와 배경은 그대로 둡니다. */
+  function applyTextShifts(clonedRoot, targets, shifts) {
     try {
-      var live = sheet.querySelectorAll(SELECTOR);
-      var cloned = clonedRoot.querySelectorAll(SELECTOR);
+      var live = sheet.querySelectorAll(CENTER_SELECTOR);
+      var cloned = clonedRoot.querySelectorAll(CENTER_SELECTOR);
       // 짝이 맞지 않으면 엉뚱한 요소를 건드리게 되므로 그만둡니다.
       if (live.length !== cloned.length) { return; }
 
-      for (var i = 0; i < live.length; i += 1) {
-        var cs = window.getComputedStyle(live[i]);
-        var lineHeight = parseFloat(cs.lineHeight);
-        var padTop = parseFloat(cs.paddingTop) || 0;
-        var padBottom = parseFloat(cs.paddingBottom) || 0;
+      targets.forEach(function (t, n) {
+        var shift = shifts[n];
+        if (!shift) { return; }
+        var node = cloned[t.index];
+        if (!node) { return; }
 
-        // 패딩으로 중앙을 맞추는 한 줄짜리 요소만 대상입니다.
-        if (!isFinite(lineHeight) || lineHeight <= 0) { continue; }
-        if (padTop === 0 && padBottom === 0) { continue; }
-
-        var height = live[i].getBoundingClientRect().height;
-        if (!(height > 0)) { continue; }
-
-        var borderTop = parseFloat(cs.borderTopWidth) || 0;
-        var borderBottom = parseFloat(cs.borderBottomWidth) || 0;
-        // 두 줄 이상이면 line-height 를 바꾸면 안 됩니다.
-        if (height > lineHeight + padTop + padBottom + borderTop + borderBottom + 1) {
-          continue;
-        }
-
-        cloned[i].style.paddingTop = "0px";
-        cloned[i].style.paddingBottom = "0px";
-        cloned[i].style.lineHeight = (lineHeight + padTop + padBottom) + "px";
-      }
+        var span = node.ownerDocument.createElement("span");
+        span.textContent = node.textContent;
+        span.style.position = "relative";
+        span.style.top = (-shift) + "px";
+        node.textContent = "";
+        node.appendChild(span);
+      });
     } catch (err) {
       // 보정에 실패하더라도 저장 자체는 계속되어야 합니다.
     }
@@ -167,14 +283,19 @@
       );
       hidden.forEach(function (el) { el.style.display = "none"; });
      
-      window.html2canvas(sheet, {
-        backgroundColor: "#FFFBF6",
-        scale: capScale(sheet),
-        useCORS: true,
-        logging: false,
-        scrollX: 0,
-        scrollY: -window.scrollY,
-        onclone: function (doc, el) { fixCapturedCentering(el); }
+      // 글자가 몇 px 밀리는지 먼저 재고, 그 값을 본 캡처에 반영합니다.
+      var targets = centerTargets();
+
+      measureTextShifts(targets).then(function (shifts) {
+        return window.html2canvas(sheet, {
+          backgroundColor: "#FFFBF6",
+          scale: capScale(sheet),
+          useCORS: true,
+          logging: false,
+          scrollX: 0,
+          scrollY: -window.scrollY,
+          onclone: function (doc, el) { applyTextShifts(el, targets, shifts); }
+        });
       }).then(function (canvas) {
         var filename = safeFilename(config.filename) + ".png";
         if (canvas.toBlob) {
