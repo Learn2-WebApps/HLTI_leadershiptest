@@ -82,6 +82,50 @@
     document.body.appendChild(bg);
   }
 
+  /**
+   * 저장 이미지에서 글자가 아래로 치우치는 것을 바로잡습니다.
+   *
+   * html2canvas 는 상하 패딩과 line-height 가 함께 있는 한 줄짜리 요소에서
+   * 글자를 line-box 아래쪽에 그립니다(화면에서는 정상). 알약 배지·칩처럼
+   * 패딩으로 세로 가운데를 맞춘 요소가 여기에 해당합니다.
+   *
+   * 그래서 복제본에서만 '패딩으로 맞춘 중앙정렬'을 'line-height 로 맞춘
+   * 중앙정렬'로 바꿉니다. 상자 크기(height)는 그대로 두므로 배치는 변하지
+   * 않고, 글자 위치만 화면과 같아집니다.
+   *
+   * 화면의 CSS 는 건드리지 않습니다. onclone 이 넘겨주는 복제 DOM 에만
+   * 적용되고, 캡처가 끝나면 그 복제본은 버려집니다.
+   */
+  function fixCapturedCentering(doc, root) {
+    var SELECTOR = ".hero__label, .result-brand__mark, .chip, .code-chip";
+    var view = doc.defaultView || window;
+
+    Array.prototype.forEach.call(root.querySelectorAll(SELECTOR), function (el) {
+      var cs = view.getComputedStyle(el);
+      var lineHeight = parseFloat(cs.lineHeight);
+      var padTop = parseFloat(cs.paddingTop) || 0;
+      var padBottom = parseFloat(cs.paddingBottom) || 0;
+
+      // 패딩으로 중앙을 맞추는 요소만 대상입니다.
+      if (!isFinite(lineHeight) || (padTop === 0 && padBottom === 0)) { return; }
+
+      var borderTop = parseFloat(cs.borderTopWidth) || 0;
+      var borderBottom = parseFloat(cs.borderBottomWidth) || 0;
+      var height = el.getBoundingClientRect().height;
+
+      // 두 줄 이상이면 line-height 를 바꾸면 안 되므로 건너뜁니다.
+      if (height > lineHeight + padTop + padBottom + borderTop + borderBottom + 1) {
+        return;
+      }
+
+      el.style.boxSizing = "border-box";
+      el.style.height = height + "px";
+      el.style.lineHeight = (height - borderTop - borderBottom) + "px";
+      el.style.paddingTop = "0";
+      el.style.paddingBottom = "0";
+    });
+  }
+
   // iOS Safari의 캔버스 최대 면적은 4096x4096px입니다.
   // 결과지가 세로로 길면 이 한계에 걸려 빈 이미지가 됩니다.
   function capScale(el) {
@@ -117,7 +161,8 @@
         useCORS: true,
         logging: false,
         scrollX: 0,
-        scrollY: -window.scrollY
+        scrollY: -window.scrollY,
+        onclone: function (doc, el) { fixCapturedCentering(doc, el); }
       }).then(function (canvas) {
         var filename = safeFilename(config.filename) + ".png";
         if (canvas.toBlob) {
