@@ -21,7 +21,7 @@ const config = require('./lib/config');
 const db = require('./lib/db');
 const security = require('./lib/security');
 const { loadContent, ContentError } = require('./lib/content');
-const { InvalidFlow } = require('./lib/errors');
+const { InvalidFlow, HttpError } = require('./lib/errors');
 const participantRoutes = require('./routes/participant');
 const adminRoutes = require('./routes/admin');
 
@@ -82,10 +82,20 @@ async function createApp() {
     noCache: config.debug,
   });
 
-  /** 줄바꿈을 <br> 로. 먼저 이스케이프하므로 XSS 위험이 없습니다. */
+  /**
+   * 줄바꿈을 <br> 로. 먼저 이스케이프하므로 XSS 위험이 없습니다.
+   *
+   * nunjucks 의 내부 API(nunjucks.lib.escape)에 기대면 번들링 환경에 따라
+   * 사라질 수 있어, 이스케이프를 직접 구현합니다.
+   */
+  const HTML_ESCAPE = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&#34;', "'": '&#39;' };
+  function escapeHtml(text) {
+    return String(text).replace(/[&<>"']/g, (ch) => HTML_ESCAPE[ch]);
+  }
+
   env.addFilter('nl2br', (value) => {
     if (!value) return '';
-    const escaped = nunjucks.lib.escape(String(value));
+    const escaped = escapeHtml(value);
     return new nunjucks.runtime.SafeString(escaped.split('\n').join('<br>'));
   });
 
@@ -245,16 +255,75 @@ async function createApp() {
     res.json({ status: 'ok', characters: content.characters.length });
   });
 
+  // 임시 진단용. 배포 환경에서만 재현되는 렌더링 오류의 원인을 확인하기 위한
+  // 경로이며, 문제가 해결되면 지웁니다. 비밀 값은 내보내지 않습니다.
+  app.get('/__diag', (req, res) => {
+    const results = {};
+    // res.render 를 써야 res.locals(csrf_token 등)가 실제 화면과 똑같이 적용됩니다.
+    const templates = [
+      ['login.html', { error: null, form: {} }],
+      ['admin_login.html', { error: null }],
+      ['error.html', { title: 'x', body: 'y' }],
+    ];
+
+    const runOne = (i) => {
+      if (i >= templates.length) {
+        res.json({
+          node: process.version,
+          templatesDir: config.templatesDir,
+          textsLoginHowTo: Array.isArray(content.texts?.login?.how_to)
+            ? content.texts.login.how_to.length + '개'
+            : '없음/배열아님',
+          hasCsrfLocal: typeof res.locals.csrf_token,
+          nunjucksLib: typeof nunjucks.lib,
+          nunjucksRuntime: typeof nunjucks.runtime,
+          render: results,
+        });
+        return;
+      }
+      const [name, locals] = templates[i];
+      res.render(name, { ...locals }, (err, html) => {
+        results[name] = err
+          ? { ok: false, error: err.name + ': ' + String(err.message).slice(0, 400) }
+          : { ok: true, bytes: html.length };
+        runOne(i + 1);
+      });
+    };
+    runOne(0);
+  });
+
   // --- 404 -----------------------------------------------------------------
-  app.use((req, res) => {
-    res.status(404).render('error.html', {
-      title: content.text('errors.not_found_title'),
-      body: content.text('errors.not_found_body'),
-    });
+  app.use((req, res, next) => {
+    next(new HttpError(404, '경로를 찾을 수 없습니다.'));
   });
 
   // --- 오류 처리 ------------------------------------------------------------
   // 내부 사유는 로그로만 남기고 화면에는 노출하지 않습니다.
+
+  /**
+   * 오류 화면을 그립니다.
+   *
+   * error.html 자체가 그려지지 않는 상황(템플릿 누락, 필터 오류 등)에서도
+   * 함수가 죽지 않도록 마지막에 평문으로 물러섭니다. 이 안전망이 없으면
+   * 렌더링 오류가 다시 오류 처리기로 들어가 무한히 맴돌거나 함수가 중단됩니다.
+   */
+  function sendErrorPage(res, status, title, body) {
+    res.status(status).render('error.html', { title, body }, (renderErr, html) => {
+      if (!renderErr) {
+        res.send(html);
+        return;
+      }
+      console.error('[HLTI] 오류 화면 렌더링 실패:', renderErr);
+      res.type('html').send(
+        '<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8">' +
+        `<title>${escapeHtml(title)}</title></head>` +
+        '<body style="font-family:sans-serif;padding:40px;text-align:center">' +
+        `<h1>${escapeHtml(title)}</h1><p>${escapeHtml(body)}</p>` +
+        '<p><a href="/">처음으로</a></p></body></html>'
+      );
+    });
+  }
+
   // eslint-disable-next-line no-unused-vars
   app.use((err, req, res, next) => {
     const status = err.status || err.statusCode || 500;
@@ -262,34 +331,30 @@ async function createApp() {
     if (err instanceof InvalidFlow) {
       console.info(`[HLTI] 흐름 이탈: ${err.message} (${req.path})`);
       const expired = !req.session || !req.session.participant;
-      return res.status(400).render('error.html', {
-        title: content.text(expired ? 'errors.session_expired_title'
-                                    : 'errors.invalid_access_title'),
-        body: content.text(expired ? 'errors.session_expired_body'
-                                   : 'errors.invalid_access_body'),
-      });
+      return sendErrorPage(res, 400,
+        content.text(expired ? 'errors.session_expired_title'
+                             : 'errors.invalid_access_title'),
+        content.text(expired ? 'errors.session_expired_body'
+                             : 'errors.invalid_access_body'));
     }
 
     if (status === 404) {
-      return res.status(404).render('error.html', {
-        title: content.text('errors.not_found_title'),
-        body: content.text('errors.not_found_body'),
-      });
+      return sendErrorPage(res, 404,
+        content.text('errors.not_found_title'),
+        content.text('errors.not_found_body'));
     }
 
     if (status < 500) {
       console.info(`[HLTI] ${status} ${req.method} ${req.path}: ${err.message}`);
-      return res.status(status).render('error.html', {
-        title: content.text('errors.invalid_access_title'),
-        body: content.text('errors.invalid_access_body'),
-      });
+      return sendErrorPage(res, status,
+        content.text('errors.invalid_access_title'),
+        content.text('errors.invalid_access_body'));
     }
 
     console.error(`[HLTI] 처리되지 않은 오류 (${req.path}):`, err);
-    return res.status(500).render('error.html', {
-      title: content.text('errors.server_error_title'),
-      body: content.text('errors.server_error_body'),
-    });
+    return sendErrorPage(res, 500,
+      content.text('errors.server_error_title'),
+      content.text('errors.server_error_body'));
   });
 
   return app;
