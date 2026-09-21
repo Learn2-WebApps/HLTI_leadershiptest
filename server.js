@@ -211,11 +211,41 @@ async function createApp() {
     next();
   });
 
+  /**
+   * POST 처리 뒤의 리다이렉트는 303 으로 보냅니다.
+   *
+   * Express 의 기본값은 302 인데, 버셀 같은 프록시가 이를 307 로 바꾸는 일이
+   * 있습니다. 307 은 원래 메서드를 그대로 유지하므로 브라우저가 다음 주소로
+   * POST 를 다시 보냅니다. 그러면
+   *   - 로그인 성공 → /admin/dashboard 로 POST → 그 경로엔 POST 가 없고
+   *     CSRF 토큰도 이미 새로 발급된 뒤라 '잘못된 접근' 화면이 뜨고
+   *   - 로그아웃 → /admin 으로 POST → 빈 비밀번호로 로그인 시도가 되어
+   *     '비밀번호가 올바르지 않습니다' 가 뜹니다.
+   *
+   * 303 은 '다음 주소는 GET 으로 가져가라'는 뜻이라 이 문제가 없습니다.
+   */
+  app.use((req, res, next) => {
+    if (req.method === 'POST') {
+      const redirect = res.redirect.bind(res);
+      res.redirect = (...args) => (
+        typeof args[0] === 'string' ? redirect(303, args[0]) : redirect(...args)
+      );
+    }
+    next();
+  });
+
   // --- 보안 헤더 -----------------------------------------------------------
   app.use((req, res, next) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('Referrer-Policy', 'same-origin');
+
+    // 이 아래 화면들은 모두 세션에 따라 내용이 달라집니다(CSRF 토큰, 로그인
+    // 상태, 진행 중인 응답). 캐시되면 다른 사람의 화면이나 옛 토큰이 보일 수
+    // 있으므로 저장을 막습니다. /static 은 이 미들웨어 앞에서 처리되므로
+    // 영향받지 않습니다.
+    res.setHeader('Cache-Control', 'no-store, max-age=0');
+    res.setHeader('Vary', 'Cookie');
     // 외부 리소스를 쓰지 않으므로 자기 출처로 제한합니다.
     // html2canvas 를 로컬에 두었기 때문에 inline 스크립트가 필요 없습니다.
     res.setHeader(
