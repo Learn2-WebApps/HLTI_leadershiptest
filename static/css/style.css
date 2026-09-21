@@ -1284,3 +1284,9 @@ ul, ol { padding: 0; list-style: none; }
   gap: 10px;
 }
 .sheet__actions .btn { flex: 1; min-height: 48px; font-size: 15px; }
+
+#result-sheet.is-capturing .hero__label {
+  line-height: 1;
+  padding-top: 11px;
+  padding-bottom: 11px;
+}
