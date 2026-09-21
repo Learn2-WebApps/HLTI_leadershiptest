@@ -28,12 +28,19 @@ Firestore 에만 저장합니다.
 
 | 이름 | 설명 |
 |---|---|
-| `FIREBASE_SERVICE_ACCOUNT` | 서비스 계정 JSON **전체**를 한 줄로 붙여넣기 |
+| `FIREBASE_PROJECT_ID` | 서비스 계정 JSON 의 `project_id` |
+| `FIREBASE_CLIENT_EMAIL` | 같은 JSON 의 `client_email` |
+| `FIREBASE_PRIVATE_KEY` | 같은 JSON 의 `private_key` (큰따옴표로 감싸기) |
 | `HLTI_SECRET_KEY` | 세션 쿠키 서명 키 |
 | `HLTI_ADMIN_PASSWORD` | 관리자 비밀번호 (직접 정하세요) |
 
 서비스 계정 키는 Firebase 콘솔 →
 **프로젝트 설정 → 서비스 계정 → 새 비공개 키 생성** 에서 받습니다.
+받은 JSON 에는 필드가 11개 있지만 위 3개만 있으면 됩니다.
+
+> JSON 전체를 `FIREBASE_SERVICE_ACCOUNT` 한 줄에 넣는 방식도 지원하지만,
+> 값 안에 따옴표와 쉼표가 많아 배포 플랫폼의 .env 가져오기가 이를
+> 여러 변수로 잘못 읽는 일이 있습니다. 3개로 나누는 쪽을 권합니다.
 
 `HLTI_SECRET_KEY` 는 이렇게 만듭니다.
 
@@ -59,10 +66,12 @@ npm run dev
 깃허브에 푸시하면 버셀이 자동으로 배포합니다. 처음 한 번만 설정하면 됩니다.
 
 1. 버셀에서 이 저장소를 Import
-2. **Settings → Environment Variables** 에 아래 3개를 넣습니다
+2. **Settings → Environment Variables** 에서 `.env` 를 그대로 Import 하거나 아래를 넣습니다
 
    ```
-   FIREBASE_SERVICE_ACCOUNT   서비스 계정 JSON 전체
+   FIREBASE_PROJECT_ID
+   FIREBASE_CLIENT_EMAIL
+   FIREBASE_PRIVATE_KEY
    HLTI_SECRET_KEY            랜덤 64자
    HLTI_ADMIN_PASSWORD        관리자 비밀번호
    HLTI_SECURE_COOKIE         1

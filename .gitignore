@@ -12,7 +12,6 @@ instance/
 
 # 버셀
 .vercel/
-vercel-env.txt
 
 # 의존성
 node_modules/
