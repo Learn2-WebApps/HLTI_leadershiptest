@@ -255,43 +255,6 @@ async function createApp() {
     res.json({ status: 'ok', characters: content.characters.length });
   });
 
-  // 임시 진단용. 배포 환경에서만 재현되는 렌더링 오류의 원인을 확인하기 위한
-  // 경로이며, 문제가 해결되면 지웁니다. 비밀 값은 내보내지 않습니다.
-  app.get('/__diag', (req, res) => {
-    const results = {};
-    // res.render 를 써야 res.locals(csrf_token 등)가 실제 화면과 똑같이 적용됩니다.
-    const templates = [
-      ['login.html', { error: null, form: {} }],
-      ['admin_login.html', { error: null }],
-      ['error.html', { title: 'x', body: 'y' }],
-    ];
-
-    const runOne = (i) => {
-      if (i >= templates.length) {
-        res.json({
-          node: process.version,
-          templatesDir: config.templatesDir,
-          textsLoginHowTo: Array.isArray(content.texts?.login?.how_to)
-            ? content.texts.login.how_to.length + '개'
-            : '없음/배열아님',
-          hasCsrfLocal: typeof res.locals.csrf_token,
-          nunjucksLib: typeof nunjucks.lib,
-          nunjucksRuntime: typeof nunjucks.runtime,
-          render: results,
-        });
-        return;
-      }
-      const [name, locals] = templates[i];
-      res.render(name, { ...locals }, (err, html) => {
-        results[name] = err
-          ? { ok: false, error: err.name + ': ' + String(err.message).slice(0, 400) }
-          : { ok: true, bytes: html.length };
-        runOne(i + 1);
-      });
-    };
-    runOne(0);
-  });
-
   // --- 404 -----------------------------------------------------------------
   app.use((req, res, next) => {
     next(new HttpError(404, '경로를 찾을 수 없습니다.'));
