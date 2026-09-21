@@ -82,6 +82,62 @@
     document.body.appendChild(bg);
   }
 
+  /**
+   * 저장 이미지에서 글자가 아래로 치우치는 것을 바로잡습니다.
+   *
+   * html2canvas 는 상하 패딩과 line-height 가 함께 있는 한 줄짜리 요소에서
+   * 글자를 line-box 아래쪽에 그립니다(화면에서는 정상). 패딩으로 세로
+   * 가운데를 맞춘 알약 배지·칩이 여기에 해당합니다.
+   *
+   * 그래서 복제본에서만 세로 패딩을 line-height 안으로 옮깁니다.
+   *   원래:  border + padTop + lineHeight + padBottom + border
+   *   보정:  border + 0      + (lineHeight+padTop+padBottom) + 0 + border
+   * 두 값의 합이 같으므로 상자 높이는 그대로이고, 글자만 가운데로 옵니다.
+   *
+   * 건드리는 속성은 padding-top, padding-bottom, line-height 세 개뿐입니다.
+   * 좌우 패딩·배경·테두리·높이는 손대지 않습니다.
+   *
+   * 치수는 반드시 화면에 있는 원본에서 잽니다. 복제본은 브라우저에 따라
+   * onclone 시점에 아직 배치가 끝나지 않아 높이가 0 으로 나올 수 있고,
+   * 그 값을 그대로 쓰면 요소가 찌그러집니다(iOS 에서 실제로 그랬습니다).
+   */
+  function fixCapturedCentering(clonedRoot) {
+    var SELECTOR = ".hero__label, .result-brand__mark, .chip, .code-chip";
+    try {
+      var live = sheet.querySelectorAll(SELECTOR);
+      var cloned = clonedRoot.querySelectorAll(SELECTOR);
+      // 짝이 맞지 않으면 엉뚱한 요소를 건드리게 되므로 그만둡니다.
+      if (live.length !== cloned.length) { return; }
+
+      for (var i = 0; i < live.length; i += 1) {
+        var cs = window.getComputedStyle(live[i]);
+        var lineHeight = parseFloat(cs.lineHeight);
+        var padTop = parseFloat(cs.paddingTop) || 0;
+        var padBottom = parseFloat(cs.paddingBottom) || 0;
+
+        // 패딩으로 중앙을 맞추는 한 줄짜리 요소만 대상입니다.
+        if (!isFinite(lineHeight) || lineHeight <= 0) { continue; }
+        if (padTop === 0 && padBottom === 0) { continue; }
+
+        var height = live[i].getBoundingClientRect().height;
+        if (!(height > 0)) { continue; }
+
+        var borderTop = parseFloat(cs.borderTopWidth) || 0;
+        var borderBottom = parseFloat(cs.borderBottomWidth) || 0;
+        // 두 줄 이상이면 line-height 를 바꾸면 안 됩니다.
+        if (height > lineHeight + padTop + padBottom + borderTop + borderBottom + 1) {
+          continue;
+        }
+
+        cloned[i].style.paddingTop = "0px";
+        cloned[i].style.paddingBottom = "0px";
+        cloned[i].style.lineHeight = (lineHeight + padTop + padBottom) + "px";
+      }
+    } catch (err) {
+      // 보정에 실패하더라도 저장 자체는 계속되어야 합니다.
+    }
+  }
+
   // iOS Safari의 캔버스 최대 면적은 4096x4096px입니다.
   // 결과지가 세로로 길면 이 한계에 걸려 빈 이미지가 됩니다.
   function capScale(el) {
@@ -117,7 +173,8 @@
         useCORS: true,
         logging: false,
         scrollX: 0,
-        scrollY: -window.scrollY
+        scrollY: -window.scrollY,
+        onclone: function (doc, el) { fixCapturedCentering(el); }
       }).then(function (canvas) {
         var filename = safeFilename(config.filename) + ".png";
         if (canvas.toBlob) {
