@@ -53,14 +53,11 @@
 }
 
 /* 유형별 테마 — 페이지에 type-xxx 클래스가 붙으면 액센트가 바뀝니다 */
-/* --accent-rgb 는 rgba() 에 넣어 투명도를 조절하기 위한 값입니다.
-   color-mix() 를 쓰지 않는 이유는 이미지 저장에 쓰는 html2canvas 가
-   그 함수로 계산된 색을 읽지 못하기 때문입니다. */
-.type-connector { --accent: var(--type-connector); --accent-rgb: 175, 200, 166; }
-.type-creator   { --accent: var(--type-creator);   --accent-rgb: 196, 188, 223; }
-.type-master    { --accent: var(--type-master);    --accent-rgb: 169, 196, 220; }
-.type-driver    { --accent: var(--type-driver);    --accent-rgb: 239, 184, 154; }
-body            { --accent: var(--peach);          --accent-rgb: 239, 184, 154; }
+.type-connector { --accent: var(--type-connector); }
+.type-creator   { --accent: var(--type-creator); }
+.type-master    { --accent: var(--type-master); }
+.type-driver    { --accent: var(--type-driver); }
+body            { --accent: var(--peach); }
 
 /* --------------------------------------------------------------------- */
 
@@ -698,7 +695,7 @@ ul, ol { padding: 0; list-style: none; }
   aspect-ratio: 1;
   margin: 0 auto 16px;
   background:
-    radial-gradient(circle at 50% 55%, rgba(var(--accent-rgb), .42), transparent 66%);
+    radial-gradient(circle at 50% 55%, color-mix(in srgb, var(--accent) 42%, transparent), transparent 66%);
   display: grid;
   place-items: center;
   animation: float 4.5s ease-in-out infinite;
@@ -723,8 +720,8 @@ ul, ol { padding: 0; list-style: none; }
   border-radius: 999px;
 }
 .chip--type {
-  background: rgba(var(--accent-rgb), .30);
-  border-color: rgba(var(--accent-rgb), .55);
+  background: color-mix(in srgb, var(--accent) 30%, var(--surface));
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
   color: var(--ink);
 }
 .chip--sm { font-size: 12px; padding: 3px 10px; }
@@ -828,8 +825,8 @@ ul, ol { padding: 0; list-style: none; }
 }
 .compare__art img { width: 100%; height: 100%; object-fit: contain; }
 .compare__side--result .compare__art {
-  background: rgba(var(--accent-rgb), .22);
-  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), .60), var(--shadow-sm);
+  background: color-mix(in srgb, var(--accent) 22%, var(--surface));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 60%, transparent), var(--shadow-sm);
 }
 .compare__name { font-size: 14px; font-weight: 800; line-height: 1.35; }
 

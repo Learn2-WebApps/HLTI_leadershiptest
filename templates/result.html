@@ -8,7 +8,7 @@
   <!-- 이 영역이 통째로 이미지로 저장됩니다 -->
   <div class="result-sheet" id="result-sheet">
 
-    <header class="result-brand">
+    <header class="result-brand no-capture">
       <p class="result-brand__mark">{{ brand.short_name }}</p>
       <p class="result-brand__full">{{ brand.full_name }}</p>
       <p class="result-brand__slogan">{{ brand.slogan }}</p>
@@ -57,7 +57,7 @@
 
     <!-- 6. 보완 파트너 -->
     {% if partner %}
-    <section class="block block--partner">
+    <section class="block block--partner no-capture">
       <h2 class="block__title">{{ t('result.partner_section_title') }}</h2>
       <div class="partner">
         <div class="partner__art">
@@ -94,7 +94,7 @@
 
     <!-- 8. 예측 vs 결과 -->
     {% if compare %}
-    <section class="block block--compare">
+    <section class="block block--compare no-capture">
       <h2 class="block__title">{{ t('compare.section_title') }}</h2>
       <div class="compare">
         <div class="compare__side">
@@ -124,7 +124,7 @@
     {% endif %}
 
     <!-- 9. 하단 안내 -->
-    <footer class="result-disclaimer">
+    <footer class="result-disclaimer no-capture">
       <p>{{ t('result.disclaimer') }}</p>
     </footer>
 
